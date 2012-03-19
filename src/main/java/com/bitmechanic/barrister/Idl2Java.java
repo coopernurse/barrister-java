@@ -46,11 +46,12 @@ public class Idl2Java {
     private String dirName;
     private String pkgName;
 
+    private Contract contract;
     private StringBuilder sb;
     
     public Idl2Java(String idlJson, String pkgName, String outDir) throws Exception {
         out("Reading IDL from: " + idlJson);
-        Contract c = Contract.load(new File(idlJson));
+        contract = Contract.load(new File(idlJson));
 
         out("Using package name: " + pkgName);
         this.pkgName = pkgName;        
@@ -65,22 +66,26 @@ public class Idl2Java {
             }
         }
 
-        for (Struct s : c.getStructs().values()) {
+        for (Struct s : contract.getStructs().values()) {
             generate(s);
         }
 
-        for (Enum e : c.getEnums().values()) {
+        for (Enum e : contract.getEnums().values()) {
             generate(e);
         }
 
-        for (Interface i : c.getInterfaces().values()) {
+        for (Interface i : contract.getInterfaces().values()) {
             generate(i);
         }
     }
 
     private void generate(Struct s) throws Exception {
         start(s);
-        line(0, "public class " + s.getName() + " {");
+        String extend = "";
+        if (!isBlank(s.getExtends())) {
+            extend = " extends " + s.getExtends();
+        }
+        line(0, "public class " + s.getName() + extend + " {");
 
         for (Field f : s.getFields().values()) {
             line(1, "private " + f.getJavaType() + " " + f.getName() + ";");
