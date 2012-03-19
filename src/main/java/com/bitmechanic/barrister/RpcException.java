@@ -3,7 +3,7 @@ package com.bitmechanic.barrister;
 import java.util.Map;
 import java.util.HashMap;
 
-public class RPCException extends Exception {
+public class RpcException extends Exception {
 
     public enum Error {
         INVALID_REQ(-32600), PARSE(-32700), METHOD_NOT_FOUND(-32601),
@@ -22,8 +22,8 @@ public class RPCException extends Exception {
             return this.code;
         }
 
-        public RPCException exc(String msg) {
-            return new RPCException(code, msg);
+        public RpcException exc(String msg) {
+            return new RpcException(code, msg);
         }
 
     }
@@ -33,11 +33,11 @@ public class RPCException extends Exception {
     private String message;
     private Object data;
 
-    public RPCException(int code, String message) {
+    public RpcException(int code, String message) {
         this(code, message, null);
     }
 
-    public RPCException(int code, String message, Object data) {
+    public RpcException(int code, String message, Object data) {
         this.code = code;
         this.message = message;
         this.data = data;

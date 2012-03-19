@@ -10,7 +10,7 @@ public class InProcTransport implements Transport {
         this.server = s;
     }
 
-    public Map<String,Object> request(Map<String,Object> req) throws RPCException {
+    public Map<String,Object> request(Map<String,Object> req) throws RpcException {
         return server.call(req);
     }
 

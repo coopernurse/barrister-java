@@ -8,10 +8,10 @@ public class RpcRequest {
 
     private Object[] params;
 
-    public RpcRequest(Map<String,Object> req) throws RPCException {
+    public RpcRequest(Map<String,Object> req) throws RpcException {
         String m = (String)req.get("method");
         if (m == null) {
-            throw RPCException.Error.INVALID_REQ.exc("Invalid Request. No 'method'.");
+            throw RpcException.Error.INVALID_REQ.exc("Invalid Request. No 'method'.");
         }
         method = new MethodParser(m);
 
@@ -32,7 +32,7 @@ public class RpcRequest {
         return method.getFunc();
     }
 
-    public String getString(int offset) throws RPCException {
+    public String getString(int offset) throws RpcException {
         Object obj = get(offset);
         if (obj == null) {
             return (String)obj;
@@ -45,7 +45,7 @@ public class RpcRequest {
         }
     }
 
-    public Long getLong(int offset) throws RPCException {
+    public Long getLong(int offset) throws RpcException {
         Object obj = get(offset);
         if (obj == null) {
             return (Long)obj;
@@ -64,7 +64,7 @@ public class RpcRequest {
         }
     }
 
-    public Double getDouble(int offset) throws RPCException {
+    public Double getDouble(int offset) throws RpcException {
         Object obj = get(offset);
         if (obj == null) {
             return (Double)obj;
@@ -89,7 +89,7 @@ public class RpcRequest {
         }
     }
 
-    public Boolean getBool(int offset) throws RPCException {
+    public Boolean getBool(int offset) throws RpcException {
         Object obj = get(offset);
         if (obj == null) {
             return (Boolean)obj;
@@ -102,15 +102,15 @@ public class RpcRequest {
         }
     }
 
-    private RPCException err(int offset, String expected, Object val) {
+    private RpcException err(int offset, String expected, Object val) {
         String msg = "Invalid param[" + offset + "] expected " + expected + " not " +
             val.getClass().getName();
-        return RPCException.Error.INVALID_PARAMS.exc(msg);
+        return RpcException.Error.INVALID_PARAMS.exc(msg);
     }
 
-    private Object get(int offset) throws RPCException {
+    private Object get(int offset) throws RpcException {
         if (offset > params.length) {
-            throw RPCException.Error.INVALID_REQ.exc("Invalid Request. Params length="+
+            throw RpcException.Error.INVALID_REQ.exc("Invalid Request. Params length="+
                                                      params.length + "<" + (offset+1));
         }
 

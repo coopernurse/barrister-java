@@ -27,7 +27,7 @@ public class Server {
         handlers.put(iface, handler);
     }
 
-    public Map<String,Object> call(Map<String,Object> rawReq) throws RPCException {
+    public Map<String,Object> call(Map<String,Object> rawReq) throws RpcException {
         String reqid = (String)rawReq.get("id");
 
         try {
@@ -35,22 +35,22 @@ public class Server {
             Handler handler = handlers.get(req.getIface());
             if (handler == null) {
                 String msg = "No implementation of '" + req.getIface() + "' found";
-                throw RPCException.Error.METHOD_NOT_FOUND.exc(msg);
+                throw RpcException.Error.METHOD_NOT_FOUND.exc(msg);
             }
 
             Object result = handler.call(req);
             return ok(reqid, result);
         }
-        catch (RPCException e) {
+        catch (RpcException e) {
             return err(reqid, e);
         }
         catch (Throwable t) {
             logger.throwing("Server", "call", t);
-            return err(reqid, RPCException.Error.UNKNOWN.exc(t.getMessage()));
+            return err(reqid, RpcException.Error.UNKNOWN.exc(t.getMessage()));
         }
     }
 
-    private Map<String,Object> ok(String reqid, Object result) throws RPCException {
+    private Map<String,Object> ok(String reqid, Object result) throws RpcException {
         Map<String,Object> map = init(reqid);
         if (result != null) {
             map.put("result", serialize(result));
@@ -59,7 +59,7 @@ public class Server {
         return map;
     }
 
-    private Object serialize(Object result) throws RPCException {
+    private Object serialize(Object result) throws RpcException {
         if (result == null) {
             return null;
         }
@@ -83,11 +83,11 @@ public class Server {
         }
         else {
             String msg = "Class " + clz.getName() + " is not serializable";
-            throw RPCException.Error.INVALID_RESP.exc(msg);
+            throw RpcException.Error.INVALID_RESP.exc(msg);
         }
     }
 
-    private Map<String,Object> err(String reqid, RPCException exc) {
+    private Map<String,Object> err(String reqid, RpcException exc) {
         Map<String,Object> map = init(reqid);
         map.put("error", exc.toMap());
 

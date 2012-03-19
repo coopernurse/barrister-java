@@ -12,7 +12,7 @@ public class Client {
         this.trans = t;
     }
        
-    public Map<String,Object> call(String iface, String func, Object... params) throws RPCException {
+    public Map<String,Object> call(String iface, String func, Object... params) throws RpcException {
         Map<String,Object> req = toRequest(iface, func, params);
         return trans.request(req);
     }
