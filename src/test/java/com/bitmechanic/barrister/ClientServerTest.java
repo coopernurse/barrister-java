@@ -46,7 +46,7 @@ public class ClientServerTest {
 
     class Svc implements Handler {
         
-        public Object call(RpcRequest req) throws RPCException {
+        public Object call(RpcRequest req) throws RpcException {
             String func = req.getFunc();
             if (func.equals("echo")) {
                 return echo(req.getString(0));
@@ -60,7 +60,7 @@ public class ClientServerTest {
 
             String msg = "Method '" + func + "' not found in " + 
                 this.getClass().getName();
-            throw RPCException.Error.METHOD_NOT_FOUND.exc(msg);
+            throw RpcException.Error.METHOD_NOT_FOUND.exc(msg);
         }
 
         public String echo(String s) {
