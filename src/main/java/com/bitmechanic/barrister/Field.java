@@ -33,4 +33,30 @@ public class Field extends BaseEntity {
         return isArray;
     }
 
+    public String getJavaType() {
+        String t = "";
+        if (type.equals("string")) {
+            t = "String";
+        }
+        else if (type.equals("float")) {
+            t = "Double";
+        }
+        else if (type.equals("int")) {
+            t = "Long";
+        }
+        else if (type.equals("bool")) {
+            t = "Boolean";
+        }
+        else {
+            t = type;
+        }
+
+        if (isArray) {
+            return "java.util.List<" + t + ">";
+        }
+        else {
+            return t;
+        }
+    }
+
 }

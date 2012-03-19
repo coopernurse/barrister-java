@@ -25,6 +25,10 @@ public abstract class BaseEntity {
         return name;
     }
 
+    public String getUpperName() {
+        return name.substring(0, 1).toUpperCase() + name.substring(1);
+    }
+
     public String getComment() {
         return comment;
     }
