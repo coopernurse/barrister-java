@@ -22,4 +22,20 @@ public class Interface extends BaseEntity {
         return functions;
     }
 
+    public Function getFunction(String name) {
+        for (Function f : functions) {
+            if (f.getName().equals(name))
+                return f;
+        }
+
+        return null;
+    }
+
+    @Override
+    public void setContract(Contract c) {
+        super.setContract(c);
+        for (Function f : functions) {
+            f.setContract(c);
+        }
+    }
 }

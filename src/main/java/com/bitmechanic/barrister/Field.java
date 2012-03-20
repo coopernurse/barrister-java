@@ -5,6 +5,7 @@ import java.util.Map;
 public class Field extends BaseEntity {
 
     private boolean isArray;
+    private boolean isPrimitive;
     private String type;
 
     public Field(String name, String type) {
@@ -23,6 +24,11 @@ public class Field extends BaseEntity {
             isArray = true;
             this.type = type.substring(2);
         }
+
+        this.isPrimitive = this.type.equals("string") ||
+            this.type.equals("float") ||
+            this.type.equals("int") ||
+            this.type.equals("bool");
     }
 
     public String getType() {
@@ -33,7 +39,15 @@ public class Field extends BaseEntity {
         return isArray;
     }
 
+    public boolean isPrimitive() {
+        return isPrimitive;
+    }
+
     public String getJavaType() {
+        return getJavaType(true);
+    }
+
+    public String getJavaType(boolean wrapArray) {
         String t = "";
         if (type.equals("string")) {
             t = "String";
@@ -51,7 +65,7 @@ public class Field extends BaseEntity {
             t = type;
         }
 
-        if (isArray) {
+        if (wrapArray && isArray) {
             return "java.util.List<" + t + ">";
         }
         else {

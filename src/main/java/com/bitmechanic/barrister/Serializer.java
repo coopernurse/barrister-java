@@ -7,9 +7,12 @@ import java.util.Map;
 
 public interface Serializer {
 
-    public byte[] serialize(Object o) throws IOException;
+    //public byte[] serialize(Object o) throws IOException;
 
     public List<Map<String,Object>> readList(InputStream is) throws IOException;
-    public Map<String,Object> readMap(InputStream is) throws IOException;
+    //public Map<String,Object> readMap(InputStream is) throws IOException;
+
+    RpcRequest readRequest(byte[] input) throws IOException;
+    byte[] writeResponse(RpcResponse resp) throws IOException;
 
 }

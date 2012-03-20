@@ -81,8 +81,10 @@ public class Idl2Java {
 
     private void generate(Struct s) throws Exception {
         start(s);
+        boolean hasParent = false;
         String extend = "";
         if (!isBlank(s.getExtends())) {
+            hasParent = true;
             extend = " extends " + s.getExtends();
         }
         line(0, "public class " + s.getName() + extend + " {");
@@ -103,6 +105,50 @@ public class Idl2Java {
             line(2, "return this." + f.getName() + ";");
             line(1, "}");
         }
+
+        line(0, "");
+        line(1, "@Override");
+        line(1, "public String toString() {");
+        if (hasParent) {
+            line(2, "StringBuilder sb = new StringBuilder(super.toString());");
+            line(2, "sb.append(\"" + s.getName() + ": \");");
+        }
+        else {
+            line(2, "StringBuilder sb = new StringBuilder(\"" + s.getName() + ":\");");
+        }
+        for (Field f : s.getFields().values()) {
+            line(2, "sb.append(\" " + f.getName() + "=\").append(" + f.getName() + ").append(\" \");");
+        }
+        line(2, "return sb.toString();");
+        line(1, "}");
+
+        line(0, "");
+        line(1, "@Override");
+        line(1, "public boolean equals(Object other) {");
+        line(2, "if (this == other) { return true; }");
+        line(2, "if (other == null) { return false; }");
+        line(2, "if (!(other instanceof " + s.getName() + ")) { return false; }");
+        line(2, s.getName() + " _o = (" + s.getName() + ")other;");
+        if (hasParent) {
+            line(2, "if (!super.equals(_o)) { return false; }");
+        }
+        for (Field f : s.getFields().values()) {
+            line(2, "if (" + f.getName() + " == null && _o." + f.getName() + " != null) { return false; }");
+            line(2, "else if (" + f.getName() + " != null && !" + f.getName() + ".equals(_o." + f.getName() + ")) { return false; }");
+        }
+        line(2, "return true;");
+        line(1, "}");
+
+        line(0, "");
+        line(1, "@Override");
+        line(1, "public int hashCode() {");
+        line(2, "int hash = super.hashCode();");
+        for (Field f : s.getFields().values()) {
+            line(2, "hash = hash * 31 + (" + f.getName() + " == null ? 0 : " + 
+                 f.getName() + ".hashCode());");
+        }
+        line(2, "return hash;");
+        line(1, "}");
 
         line(0, "}");
         toFile(s);
@@ -128,7 +174,6 @@ public class Idl2Java {
 
     private void generate(Interface iface) throws Exception {
         start(iface);
-        line(0, "import com.bitmechanic.barrister.RpcException;");
         line(0, "");
         line(0, "public interface " + iface.getName() + " {");
         line(0, "");
@@ -142,7 +187,7 @@ public class Idl2Java {
             }
 
             line(1, "public " + f.getReturns().getJavaType() + " " +
-                 f.getName() + "(" + params + ") throws RpcException;");
+                 f.getName() + "(" + params + ") throws com.bitmechanic.barrister.RpcException;");
         }
         line(0, "");
         line(0, "}");
@@ -164,7 +209,11 @@ public class Idl2Java {
     }
 
     private void toFile(BaseEntity b) throws Exception {
-        String outfile = dirName + File.separator + b.getName() + ".java";
+        toFile(b.getName());
+    }
+
+    private void toFile(String className) throws Exception {
+        String outfile = dirName + File.separator + className + ".java";
         out("Writing file: " + outfile);
 
         PrintWriter w = new PrintWriter(new FileWriter(outfile));

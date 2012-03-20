@@ -13,21 +13,23 @@ public class ClientServerTest {
     @Test
     public void echoMethod() throws Exception {
         init();
-        assertEquals("hi", client.call("B", "echo", "hi").get("result"));
+        RpcRequestBean req = new RpcRequestBean("id", "B", "echo", "hi");
+        assertEquals("hi", client.request(req).getResult());
     }
 
     @Test
     public void addMethod() throws Exception {
         init();
-        assertEquals(5L, client.call("A", "add", (short)1, 4).get("result"));
+        RpcRequestBean req = new RpcRequestBean("id", "A", "add", (short)1, 4);
+        assertEquals(5L, client.request(req).getResult());
     }
 
     @Test
     public void noParamsMethod() throws Exception {
         init();
-        Map<String,Object> expected = new HashMap<String,Object>();
-        expected.put("hi", "hello");
-        assertEquals(expected, client.call("A", "say_hi").get("result"));
+        RpcRequestBean req = new RpcRequestBean("id", "A", "say_hi");
+        HiResult res = (HiResult)client.request(req).getResult();
+        assertEquals("hello", res.getHi());
     }
 
     private void init() throws Exception {
@@ -40,29 +42,11 @@ public class ClientServerTest {
         server.addHandler("A", svc);
         server.addHandler("B", svc);
 
-        Transport trans = new InProcTransport(server);
-        client = new Client(trans);
+        client = new InProcClient(server);
     }
 
-    class Svc implements Handler {
+    class Svc {
         
-        public Object call(RpcRequest req) throws RpcException {
-            String func = req.getFunc();
-            if (func.equals("echo")) {
-                return echo(req.getString(0));
-            }
-            else if (func.equals("add")) {
-                return add(req.getLong(0), req.getLong(1));
-            }
-            else if (func.equals("say_hi")) {
-                return say_hi();
-            }
-
-            String msg = "Method '" + func + "' not found in " + 
-                this.getClass().getName();
-            throw RpcException.Error.METHOD_NOT_FOUND.exc(msg);
-        }
-
         public String echo(String s) {
             return s;
         }
@@ -77,7 +61,7 @@ public class ClientServerTest {
 
     }
 
-    class HiResult implements BarristerSerializable {
+    class HiResult {
 
         private String hi;
 
@@ -85,15 +69,7 @@ public class ClientServerTest {
             this.hi = hi;
         }
 
-        public Map<String,Object> serialize() {
-            Map<String,Object> map = new HashMap<String,Object>();
-            map.put("hi", this.hi);
-            return map;
-        }
-
-        public void deserialize(Map<String,Object> m) {
-            this.hi = (String)m.get("hi");
-        }
+        public String getHi() { return hi; }
 
     }
 

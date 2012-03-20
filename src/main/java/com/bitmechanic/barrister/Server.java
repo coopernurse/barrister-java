@@ -1,6 +1,7 @@
 package com.bitmechanic.barrister;
 
 import java.lang.reflect.Method;
+import java.io.IOException;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
@@ -12,53 +13,63 @@ public class Server {
     private static Logger logger = Logger.getLogger("barrister");
 
     private Contract contract;
-    private Map<String, Handler> handlers;    
+    private Map<String, Object> handlers;    
 
     public Server(Contract c) {
         this.contract = c;
-        this.handlers = new HashMap<String,Handler>();
+        this.handlers = new HashMap<String,Object>();
     }
 
     public Contract getContract() {
         return this.contract;
     }
 
-    public void addHandler(String iface, Handler handler) {
+    public void addHandler(String iface, Object handler) {
         handlers.put(iface, handler);
     }
 
-    public Map<String,Object> call(Map<String,Object> rawReq) throws RpcException {
-        String reqid = (String)rawReq.get("id");
-
+    public RpcResponse call(RpcRequest req) throws RpcException {
+        RpcResponse resp = null;
         try {
-            RpcRequest req = new RpcRequest(rawReq);
-            Handler handler = handlers.get(req.getIface());
+            Function func = getFunction(req);
+            Object handler = handlers.get(req.getIface());
             if (handler == null) {
                 String msg = "No implementation of '" + req.getIface() + "' found";
                 throw RpcException.Error.METHOD_NOT_FOUND.exc(msg);
             }
 
-            Object result = handler.call(req);
-            return ok(reqid, result);
+            Object result = func.validateAndInvoke(req, handler);
+            resp = new RpcResponse(req, result);
         }
         catch (RpcException e) {
-            return err(reqid, e);
+            resp = new RpcResponse(req, e);
         }
         catch (Throwable t) {
             logger.throwing("Server", "call", t);
-            return err(reqid, RpcException.Error.UNKNOWN.exc(t.getMessage()));
-        }
-    }
-
-    private Map<String,Object> ok(String reqid, Object result) throws RpcException {
-        Map<String,Object> map = init(reqid);
-        if (result != null) {
-            map.put("result", serialize(result));
+            resp = new RpcResponse(req, RpcException.Error.UNKNOWN.exc(t.getMessage()));
         }
 
-        return map;
+        return resp;
     }
 
+    private Function getFunction(RpcRequest req) throws RpcException {
+        Interface iface = contract.getInterfaces().get(req.getIface());
+        if (iface == null) {
+            String msg = "No implementation of '" + req.getIface() + "' found";
+            throw RpcException.Error.METHOD_NOT_FOUND.exc(msg);
+        }
+
+        Function func = iface.getFunction(req.getFunc());
+        if (func == null) {
+            String msg = "Function '" + req.getFunc() + "' not found in '" +
+                req.getIface() + "'";
+            throw RpcException.Error.METHOD_NOT_FOUND.exc(msg);
+        }
+
+        return func;
+    }
+
+    /*
     private Object serialize(Object result) throws RpcException {
         if (result == null) {
             return null;
@@ -89,21 +100,6 @@ public class Server {
             throw RpcException.Error.INVALID_RESP.exc(msg);
         }
     }
-
-    private Map<String,Object> err(String reqid, RpcException exc) {
-        Map<String,Object> map = init(reqid);
-        map.put("error", exc.toMap());
-
-        return map;
-    }
-
-    private Map<String,Object> init(String reqid) {
-        Map<String,Object> map = new HashMap<String,Object>();
-        map.put("jsonrpc", "2.0");
-        if (reqid != null) {
-            map.put("id", reqid);
-        }
-        return map;
-    }
+    */
 
 }
