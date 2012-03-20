@@ -97,6 +97,11 @@ public class Idl2Java {
                  " " + f.getName() + ") {");
             line(2, "this." + f.getName() + " = " + f.getName() + ";");
             line(1, "}");
+
+            line(0, "");
+            line(1, "public " + f.getJavaType() + " get" + f.getUpperName() + "() {");
+            line(2, "return this." + f.getName() + ";");
+            line(1, "}");
         }
 
         line(0, "}");
