@@ -100,16 +100,19 @@ public class Contract extends BaseEntity {
         }
         else if (expectedType.equals("int")) {
             boolean v = clz == Short.class || clz == Integer.class ||
-                clz == Long.class;
+                clz == Long.class || clz == short.class || clz == int.class ||
+                clz == long.class;
             return expectType(v, expectedType, obj);
         }
         else if (expectedType.equals("float")) {
             boolean v = clz == Short.class || clz == Integer.class ||
-                clz == Long.class || clz == Float.class || clz == Double.class;
+                clz == Long.class || clz == Float.class || clz == Double.class ||
+                clz == short.class || clz == int.class || clz == long.class ||
+                clz == float.class || clz == double.class;
             return expectType(v, expectedType, obj);
         }
         else if (expectedType.equals("bool")) {
-            boolean v = clz == Boolean.class;
+            boolean v = clz == Boolean.class || clz == boolean.class;
             return expectType(v, expectedType, obj);
         }
         else {

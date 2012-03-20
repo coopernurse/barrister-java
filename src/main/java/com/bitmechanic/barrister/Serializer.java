@@ -7,8 +7,9 @@ import java.util.Map;
 
 public interface Serializer {
 
-    public byte[] serialize(Object o);
+    public byte[] serialize(Object o) throws IOException;
 
     public List<Map<String,Object>> readList(InputStream is) throws IOException;
+    public Map<String,Object> readMap(InputStream is) throws IOException;
 
 }

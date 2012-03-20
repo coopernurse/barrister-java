@@ -1,11 +1,38 @@
 package com.bitmechanic.barrister;
 
 import java.util.Map;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
 
 public class RpcRequest {
 
-    private MethodParser method;
+    public static Builder Builder() {
+        return new Builder();
+    }
 
+    public static class Builder {
+        private String method;
+        private List<Object> params = new ArrayList<Object>();
+
+        public Builder method(String m) { method = m; return this; }
+        public Builder param(Object o) { params.add(o); return this; }
+        public RpcRequest build() throws RpcException {
+            Map<String,Object> map = new HashMap<String,Object>();
+            map.put("method", method);
+            if (params.size() > 0) {
+                Object arr[] = new Object[params.size()];
+                params.toArray(arr);
+                map.put("params", arr);
+            }
+
+            return new RpcRequest(map);
+        }
+    }
+
+    ////////////////////
+
+    private MethodParser method;
     private Object[] params;
 
     public RpcRequest(Map<String,Object> req) throws RpcException {
@@ -30,6 +57,10 @@ public class RpcRequest {
 
     public String getFunc() {
         return method.getFunc();
+    }
+
+    public int getParamCount() {
+        return params.length;
     }
 
     public String getString(int offset) throws RpcException {
@@ -99,6 +130,36 @@ public class RpcRequest {
         }
         else {
             throw err(offset, "Bool", obj);
+        }
+    }
+
+    public Map getMap(int offset) throws RpcException {
+        Object obj = get(offset);
+        if (obj == null) {
+            return null;
+        }
+        else {
+            try {
+                return (Map)obj;
+            }
+            catch (Throwable t) {
+                throw err(offset, "Map", obj);
+            }
+        }
+    }
+
+    public List getList(int offset) throws RpcException {
+        Object obj = get(offset);
+        if (obj == null) {
+            return null;
+        }
+        else {
+            try {
+                return (List)obj;
+            }
+            catch (Throwable t) {
+                throw err(offset, "List", obj);
+            }
         }
     }
 

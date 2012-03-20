@@ -67,7 +67,10 @@ public class Server {
         Class clz = result.getClass();
         if (clz == String.class || clz == Short.class || clz == Integer.class ||
             clz == Long.class || clz == Float.class || clz == Double.class ||
-            clz == Boolean.class) {
+            clz == Boolean.class || clz == short.class || clz == int.class ||
+            clz == long.class || clz == float.class || clz == double.class ||
+            clz == boolean.class) {
+
             return result;
         }
         else if (result instanceof List) {
