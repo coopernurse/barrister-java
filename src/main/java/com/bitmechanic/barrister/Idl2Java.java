@@ -82,7 +82,7 @@ public class Idl2Java {
     private void generate(Struct s) throws Exception {
         start(s);
         boolean hasParent = false;
-        String extend = "";
+        String extend = " implements com.bitmechanic.barrister.BStruct";
         if (!isBlank(s.getExtends())) {
             hasParent = true;
             extend = " extends " + s.getExtends();

@@ -2,6 +2,7 @@ package com.bitmechanic.barrister.conform;
 
 import java.io.File;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
@@ -32,8 +33,8 @@ public class ConformServer implements HttpServer.Handler {
         serializer = new JacksonSerializer();
 
         server = new Server(contract);
-        server.addHandler("A", new AImpl());
-        server.addHandler("B", new BImpl());
+        server.addHandler(A.class, new AImpl());
+        server.addHandler(B.class, new BImpl());
     }
 
     public void start() throws Exception {
@@ -47,8 +48,16 @@ public class ConformServer implements HttpServer.Handler {
         }
 
         try {
-            RpcRequest req = serializer.readRequest(post.getBytes("utf-8"));
-            return new String(serializer.writeResponse(server.call(req)), "utf-8");
+            ByteArrayInputStream bis = new ByteArrayInputStream(post.getBytes("utf-8"));
+            Map map = serializer.readMap(bis);
+            bis.close();
+            RpcRequest req = new RpcRequest(map);
+
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            serializer.write(server.call(req).toMap(), bos);
+            String s = new String(bos.toByteArray(), "utf-8");
+            bos.close();
+            return s;
         }
         catch (Exception e) {
             e.printStackTrace();

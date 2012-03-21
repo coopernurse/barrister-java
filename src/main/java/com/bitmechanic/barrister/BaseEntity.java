@@ -37,4 +37,8 @@ public abstract class BaseEntity {
         contract = c;
     }
 
+    public Contract getContract() {
+        return contract;
+    }
+
 }

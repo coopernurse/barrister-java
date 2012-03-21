@@ -39,6 +39,8 @@ public class Contract extends BaseEntity {
     private boolean validateRequest;
     private boolean validateResponse;
 
+    private String packageName;
+
     public Contract() {
         interfaces = new HashMap<String, Interface>();
         structs    = new HashMap<String, Struct>();
@@ -69,6 +71,14 @@ public class Contract extends BaseEntity {
                 enums.put(en.getName(), en);
             }
         }
+    }
+
+    public void setPackage(String pkgName) {
+        this.packageName = pkgName;
+    }
+    
+    public String getPackage() {
+        return packageName;
     }
 
     public boolean isValidateRequest() {

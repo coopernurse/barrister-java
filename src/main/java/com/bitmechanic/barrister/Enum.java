@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class Enum extends BaseEntity {
+public class Enum extends BaseEntity implements TypeConverter {
 
     private List<String> values;
 
@@ -49,6 +49,30 @@ public class Enum extends BaseEntity {
                 return ValidationResult.invalid(msg);
             }
         }
+    }
+
+    public Class getTypeClass() {
+        try {
+            return Class.forName(contract.getPackage() + "." + name);
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Object fromRequest(String pkg, Object o) throws RpcException {
+        ValidationResult vr = validate(o);
+        if (vr.isValid())
+            return o;
+        else
+            throw RpcException.Error.INVALID_PARAMS.exc(vr.getMessage());
+    }
+
+    public Object toResponse(Object o) throws RpcException {
+        if (o == null)
+            throw RpcException.Error.INVALID_RESP.exc("enum " + name + " cannot be null");
+        else
+            return o;
     }
 
     @Override

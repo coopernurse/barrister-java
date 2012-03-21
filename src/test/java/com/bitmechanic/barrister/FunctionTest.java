@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import java.util.List;
 import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class FunctionTest {
 
@@ -18,28 +19,42 @@ public class FunctionTest {
 
     @Test
     public void invokeEmpty() throws Exception {
-        Function f = new Function("hi");
+        Function f = new Function("hi", "string");
         f.setContract(c);
-        assertEquals("hi", f.validateAndInvoke(new RpcRequestBean("myid", "iface", "hi"),
-                                               new Foo()));
+        assertEquals("hi", f.invoke(req("hi", null), new Foo()));
     }
 
     @Test
     public void invokeStringParam() throws Exception {
-        Function f = new Function("echo");
+        Function f = new Function("echo", "string");
+        f.getParams().add(new Field("a", "string"));
         f.setContract(c);
-        assertEquals("yo", f.validateAndInvoke(req("echo", "yo"), new Foo()));
+        assertEquals("yo", f.invoke(req("echo", "yo"), new Foo()));
     }
 
     @Test
     public void invokeArrayParam() throws Exception {
-        Function f = new Function("add");
+        Function f = new Function("add", "int");
+        f.getParams().add(new Field("a", "[]int"));
         f.setContract(c);
-        assertEquals(10L, f.validateAndInvoke(req("add", new Long[] {1L, 8L, 1L }), new Foo()));
+        Object param = new Long[] {1L, 8L, 1L };
+        assertEquals(10L, f.invoke(req("add", asList(param)), new Foo()));
     }
 
-    private RpcRequestBean req(String func, Object params) {
-        return new RpcRequestBean("myid", "iface", func, params);
+    private RpcRequest req(String func, Object params) {
+        HashMap<String,Object> map = new HashMap<String,Object>();
+        map.put("id", "myid");
+        map.put("method", "iface."+func);
+        map.put("params", params);
+        return new RpcRequest(map);
+    }
+
+    private List asList(Object... args) {
+        ArrayList list = new ArrayList();
+        for (Object o : args) {
+            list.add(o);
+        }
+        return list;
     }
 
     class Foo {

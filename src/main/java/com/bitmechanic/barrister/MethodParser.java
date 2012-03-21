@@ -10,8 +10,11 @@ public class MethodParser {
 
     private String iface;
     private String func;
+    private String method;
 
     public MethodParser(String method) {
+        this.method = method;
+
         int pos = method.indexOf(".");
         if (pos < 1) {
             this.iface = "";
@@ -21,6 +24,10 @@ public class MethodParser {
             this.iface = method.substring(0, pos);
             this.func = method.substring(pos+1);
         }
+    }
+
+    public String getMethod() {
+        return method;
     }
 
     public String getIface() {

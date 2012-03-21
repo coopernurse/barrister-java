@@ -13,10 +13,13 @@ public class Function extends BaseEntity {
     private List<Field> params;
     private Field returns;
 
-    public Function(String name) {
+    public Function(String name, String returns) {
         this.name = name;
+        this.params = new ArrayList<Field>();
+        this.returns = new Field("", returns);
     }
 
+    @SuppressWarnings("unchecked") 
     public Function(Map<String,Object> data) {
         super(data);
      
@@ -38,41 +41,55 @@ public class Function extends BaseEntity {
         return returns;
     }
 
-    public Object validateAndInvoke(RpcRequest req, Object handler) throws Exception {
+    @Override
+    public void setContract(Contract c) {
+        super.setContract(c);
+        for (Field f : params) {
+            f.setContract(c);
+        }
+        returns.setContract(c);
+    }
+
+    public Object invoke(RpcRequest req, Object handler) throws Exception {
         if (contract == null) {
             throw new IllegalStateException("contract cannot be null");
         }
 
-        Method method   = getMethod(handler);
+        Method method      = getMethod(handler);
+        Object reqParams[] = convertParams(req, method);
+
+        return convertResult(method.invoke(handler, reqParams));
+    }
+
+    private Object[] convertParams(RpcRequest req, Method method) throws RpcException {
         Class pTypes[]  = method.getParameterTypes();
-        Object params[] = new Object[pTypes.length];
-
-        int i = 0;
-        for (Class c : pTypes) {
-            if (!req.hasNextParam()) {
-                String msg = "Function '" + getMethodName(req) + 
-                    "' expects " + pTypes.length + " param(s). " + i + " given.";
-                throw RpcException.Error.INVALID_PARAMS.exc(msg);
-            }
-
-            try {
-                params[i] = req.nextParam(c);
-            }
-            catch (Exception e) {
-                String msg = "Unable to convert param " + getMethodName(req)
-                    + "[" + i + "] - " + e.getMessage();
-                throw RpcException.Error.INVALID_PARAMS.exc(msg);
-            }
-            i++;
+        if (params.size() != pTypes.length) {
+            String mname = method.getDeclaringClass().getName() + "." + method.getName();
+            String msg = "Param mismatch for: " + req.getMethod() + " - Java expects " +
+                 pTypes.length + " param(s), But IDL expects: " + params.size() + 
+                " - Make sure IDL and generated Java classes are in sync";
+            throw invParams(msg);
         }
 
-        if (req.hasNextParam()) {
-            String msg = "Function '" + getMethodName(req) + 
-                    "' expects " + pTypes.length + " param(s). More were given.";
-            throw RpcException.Error.INVALID_PARAMS.exc(msg);
+        Object reqParams[] = req.getParamsAsArray();
+        if (reqParams.length != params.size()) {
+            String msg = "Function '" + req.getMethod() + "' expects " + 
+               params.size() + " param(s). " + reqParams.length + " given.";
+            throw invParams(msg);
         }
 
-        return method.invoke(handler, params);
+        String pkg = contract.getPackage();
+
+        Object convParams[] = new Object[pTypes.length];
+        for (int i = 0; i < convParams.length; i++) {
+            convParams[i] = params.get(i).getTypeConverter().fromRequest(pkg, reqParams[i]);
+        }
+
+        return convParams;
+    }
+
+    private Object convertResult(Object res) throws RpcException {
+        return returns.getTypeConverter().toResponse(res);
     }
 
     private String getMethodName(RpcRequest req) {
@@ -89,6 +106,10 @@ public class Function extends BaseEntity {
         String msg = "Class '" + handler.getClass().getName() + 
             "' does not contain function: '" + name + "'";
         throw RpcException.Error.METHOD_NOT_FOUND.exc(msg);
+    }
+
+    private RpcException invParams(String msg) {
+        return RpcException.Error.INVALID_PARAMS.exc(msg);
     }
 
 }

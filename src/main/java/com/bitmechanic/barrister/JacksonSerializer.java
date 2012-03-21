@@ -15,7 +15,7 @@ import org.codehaus.jackson.map.JsonSerializer;
 import org.codehaus.jackson.map.ser.CustomSerializerFactory;
 import java.io.InputStream;
 import java.io.IOException;
-import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
 import org.codehaus.jackson.util.CharTypes;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.impl.JsonWriteContext;
@@ -36,18 +36,27 @@ public class JacksonSerializer implements Serializer
         JsonNode node = mapper.valueToTree(o);
         return node.toString().getBytes("utf-8");
     }
+    */
         
-    public Map<String,Object> readMap(InputStream is) throws IOException {
+    public Map readMap(InputStream is) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         return mapper.readValue(is, Map.class);
     }
-    */
 
-    public List<Map<String,Object>> readList(InputStream is) throws IOException {
+    public List readList(InputStream is) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         return mapper.readValue(is, List.class);
     }
 
+    public void write(Map map, OutputStream os) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        JsonGenerator gen = jsonFactory.createJsonGenerator(os);
+        gen.enable(JsonGenerator.Feature.ESCAPE_NON_ASCII);
+        mapper.writeValue(gen, map);
+        gen.close();
+    }
+
+    /*
     public RpcRequest readRequest(byte[] input) throws IOException {
         return new JacksonRpcRequest(input);
     }
@@ -86,5 +95,6 @@ public class JacksonSerializer implements Serializer
         bos.close();
         return arr;
     }
+    */
 
 }

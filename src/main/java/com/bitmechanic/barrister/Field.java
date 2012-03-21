@@ -18,6 +18,44 @@ public class Field extends BaseEntity {
         setType((String)data.get("type"));
     }
 
+    public TypeConverter getTypeConverter() throws RpcException {
+        if (contract == null) {
+            throw new IllegalStateException("contract cannot be null");
+        }
+
+        TypeConverter tc = null;
+
+        if (type.equals("string"))
+            tc = new StringTypeConverter();
+        else if (type.equals("int"))
+            tc = new IntTypeConverter();
+        else if (type.equals("float"))
+            tc = new FloatTypeConverter();
+        else if (type.equals("bool"))
+            tc = new BoolTypeConverter();
+        else {
+            Struct s = contract.getStructs().get(type);
+            if (s != null) {
+                tc = s;
+            }
+
+            Enum e = contract.getEnums().get(type);
+            if (e != null) {
+                tc = e;
+            }
+        }
+
+        if (tc == null) {
+            throw RpcException.Error.INTERNAL.exc("Unknown type: " + type);
+        }
+        else if (isArray) {
+            return new ArrayTypeConverter(tc);
+        }
+        else {
+            return tc;
+        }
+    }
+
     private void setType(String type) {
         this.type = type;
         if (type.startsWith("[]")) {

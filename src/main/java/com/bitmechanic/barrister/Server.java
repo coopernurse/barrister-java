@@ -24,8 +24,23 @@ public class Server {
         return this.contract;
     }
 
-    public void addHandler(String iface, Object handler) {
-        handlers.put(iface, handler);
+    public void addHandler(Class iface, Object handler) {
+        try {
+            iface.cast(handler);
+        }
+        catch (Exception e) {
+            throw new IllegalArgumentException("Handler: " + handler.getClass().getName() +
+                                               " does not implement: " + iface.getName());
+        }
+
+        if (contract.getInterfaces().get(iface.getSimpleName()) == null) {
+            throw new IllegalArgumentException("Interface: " + iface.getName() + 
+                                               " is not a part of this Contract");
+        }
+
+        contract.setPackage(iface.getPackage().getName());
+
+        handlers.put(iface.getSimpleName(), handler);
     }
 
     public RpcResponse call(RpcRequest req) throws RpcException {
@@ -42,7 +57,7 @@ public class Server {
                 throw RpcException.Error.METHOD_NOT_FOUND.exc(msg);
             }
 
-            Object result = func.validateAndInvoke(req, handler);
+            Object result = func.invoke(req, handler);
             resp = new RpcResponse(req, result);
         }
         catch (RpcException e) {
