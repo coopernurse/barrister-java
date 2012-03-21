@@ -36,10 +36,15 @@ public class Contract extends BaseEntity {
 
     private List<Map<String,Object>> idl;
 
+    private boolean validateRequest;
+    private boolean validateResponse;
+
     public Contract() {
         interfaces = new HashMap<String, Interface>();
         structs    = new HashMap<String, Struct>();
         enums      = new HashMap<String, Enum>();
+        validateRequest = true;
+        validateResponse = true;
     }
 
     public Contract(List<Map<String,Object>> idl) {
@@ -64,6 +69,22 @@ public class Contract extends BaseEntity {
                 enums.put(en.getName(), en);
             }
         }
+    }
+
+    public boolean isValidateRequest() {
+        return validateRequest;
+    }
+
+    public boolean isValidateResponse() {
+        return validateResponse;
+    }
+
+    public void setValidateRequest(boolean b) {
+        validateRequest = b;
+    }
+    
+    public void setValidateResponse(boolean b) {
+        validateResponse = b;
     }
 
     public List<Map<String,Object>> getIdl() {

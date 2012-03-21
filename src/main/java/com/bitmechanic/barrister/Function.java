@@ -49,18 +49,34 @@ public class Function extends BaseEntity {
 
         int i = 0;
         for (Class c : pTypes) {
+            if (!req.hasNextParam()) {
+                String msg = "Function '" + getMethodName(req) + 
+                    "' expects " + pTypes.length + " param(s). " + i + " given.";
+                throw RpcException.Error.INVALID_PARAMS.exc(msg);
+            }
+
             try {
                 params[i] = req.nextParam(c);
             }
             catch (Exception e) {
-                String msg = "Unable to convert param " + req.getIface() + "." +
-                    req.getFunc() + "[" + i + "] - " + e.getMessage();
+                String msg = "Unable to convert param " + getMethodName(req)
+                    + "[" + i + "] - " + e.getMessage();
                 throw RpcException.Error.INVALID_PARAMS.exc(msg);
             }
             i++;
         }
 
+        if (req.hasNextParam()) {
+            String msg = "Function '" + getMethodName(req) + 
+                    "' expects " + pTypes.length + " param(s). More were given.";
+            throw RpcException.Error.INVALID_PARAMS.exc(msg);
+        }
+
         return method.invoke(handler, params);
+    }
+
+    private String getMethodName(RpcRequest req) {
+        return req.getIface() + "." + req.getFunc();
     }
 
     private Method getMethod(Object handler) throws RpcException {

@@ -3,6 +3,7 @@ package com.bitmechanic.barrister;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import java.util.Arrays;
+import java.io.IOException;
 
 public class JacksonSerializerTest {
 
@@ -20,6 +21,10 @@ public class JacksonSerializerTest {
 
     @Test
     public void canParseParams() throws Exception {
+        // columns:
+        //   - raw params JSON string
+        //   - expected parsed value (or Exception if we expect an error)
+        //   - Class to marshal first JSON param to
         Object[][] tests = new Object[][] {
             new Object[] { "\"hi\"", "hi", String.class },
             new Object[] { "\"hello w\\u00f6rld\"", "hello w\u00f6rld", String.class },
@@ -31,7 +36,12 @@ public class JacksonSerializerTest {
             new Object[] { "[1,2,3]", 1L, Long.class },
             new Object[] { "[[1,2,3]]", new Long[] { 1L, 2L, 3L }, Long[].class },
             new Object[] { "{ \"name\":\"trevor\", \"color\":\"blue\" }",
-                           new Cat("trevor", Color.blue), Cat.class }
+                           new Cat("trevor", Color.blue), Cat.class },
+            new Object[] { "\"hi\"", IOException.class, Long.class },
+            new Object[] { "{ \"name\":\"bob\", \"color\":\"unknown\" }",
+                           IOException.class, Cat.class },
+            new Object[] { "{ \"name\":2, \"color\":\"blue\" }",
+                           IOException.class, Cat.class }
         };
 
         int i = 0;
@@ -40,18 +50,31 @@ public class JacksonSerializerTest {
                 t[0] + "}";
 
             RpcRequest req = ser.readRequest(json.getBytes("utf-8"));
-            Object val = req.nextParam((Class)t[2]);
-            if (((Class)t[2]).isArray()) {
-                Object[] exp = (Object[])t[1];
-                Object[] actual = (Object[])val;
-                assertEquals(exp.getClass(), actual.getClass());
-                assertEquals(exp.length, actual.length);
-                for (int x = 0; x < exp.length; x++) {
-                    assertEquals(exp[x], actual[x]);
+
+            if (t[1].getClass() == Class.class) {
+                try {
+                    req.nextParam((Class)t[2]);
+                    fail("nextParam should have thrown Exception for param:" + t[0]);
+                }
+                catch (Exception e) {
+                    //System.out.println(e.getMessage());
+                    assertEquals(t[1], e.getClass());
                 }
             }
             else {
-                assertEquals(t[1], val);
+                Object val = req.nextParam((Class)t[2]);
+                if (((Class)t[2]).isArray()) {
+                    Object[] exp = (Object[])t[1];
+                    Object[] actual = (Object[])val;
+                    assertEquals(exp.getClass(), actual.getClass());
+                    assertEquals(exp.length, actual.length);
+                    for (int x = 0; x < exp.length; x++) {
+                        assertEquals(exp[x], actual[x]);
+                    }
+                }
+                else {
+                    assertEquals(t[1], val);
+                }
             }
             i++;
         }
@@ -71,6 +94,7 @@ public class JacksonSerializerTest {
             assertEquals(expected, new String(ser.writeResponse(resp), "utf-8"));
         }
     }
+
 
 }
 

@@ -73,8 +73,7 @@ public class JacksonSerializer implements Serializer
             }
             respNode.put("error", errNode);
         }
-
-        if (resp.getResult() != null) {
+        else {
             respNode.put("result", mapper.valueToTree(resp.getResult()));
         }
 

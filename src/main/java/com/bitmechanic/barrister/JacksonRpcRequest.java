@@ -79,7 +79,7 @@ public class JacksonRpcRequest implements RpcRequest {
     private Object convert(JsonNode p, Class t) throws IOException {
         if (t.isArray()) {
             if (!p.isArray()) {
-                throw new IOException("JSON node is not an array for req id: " + id);
+                throw err("array", p);
             }
 
             Class arrType = t.getComponentType();
@@ -92,17 +92,55 @@ public class JacksonRpcRequest implements RpcRequest {
             return list.toArray((Object[])Array.newInstance(arrType, 0));
         }
         else {
-            if (t == String.class) 
-                return p.getTextValue();
-            else if (t == Long.class || t == long.class)
-                return p.asLong();
-            else if (t == Double.class || t == double.class)
-                return p.asDouble();
-            else if (t == Boolean.class || t == boolean.class)
-                return p.asBoolean();
-            else
-                return mapper.treeToValue(p, t);
+            String jt = type(p);
+            if (t == String.class) {
+                if (jt.equals("string"))
+                    return p.getTextValue();
+                else
+                    throw err("string", p);
+            }
+            else if (t == Long.class || t == long.class) {
+                if (jt.equals("long"))
+                    return p.asLong();
+                else
+                    throw err("long", p);
+            }
+            else if (t == Double.class || t == double.class) {
+                if (jt.equals("double") || jt.equals("long") || jt.equals("number"))
+                    return p.asDouble();
+                else
+                    throw err("double", p);
+            }
+            else if (t == Boolean.class || t == boolean.class) {
+                if (jt.equals("bool"))
+                    return p.asBoolean();
+                else
+                    throw err("bool",  p);
+            }
+            else {
+                if (jt.equals("object"))
+                    return mapper.treeToValue(p, t);
+                else
+                    throw err(t.getName(), p);
+            }
         }
+    }
+
+    private IOException err(String expected, JsonNode p) {
+        return new IOException("Expected type: " + expected + " but '" + p.asText() +
+                               "' is type: " + type(p));
+    }
+
+    private String type(JsonNode p) {
+        if (p.isNull()) { return "null"; }
+        else if (p.isArray()) { return "array"; }
+        else if (p.isObject()) { return "object"; }
+        else if (p.isTextual()) { return "string"; }
+        else if (p.isBoolean()) { return "bool"; }
+        else if (p.isInt() || p.isLong()) { return "long"; }
+        else if (p.isFloatingPointNumber() || p.isDouble()) { return "double"; }
+        else if (p.isNumber()) { return "number"; }
+        else return "unknown";
     }
 
 }

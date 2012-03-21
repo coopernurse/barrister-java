@@ -8,9 +8,18 @@ import java.util.ArrayList;
 
 public class FunctionTest {
 
+    Contract c;
+
+    public FunctionTest() {
+        c = new Contract();
+        c.setValidateRequest(false);
+        c.setValidateResponse(false);
+    }
+
     @Test
     public void invokeEmpty() throws Exception {
         Function f = new Function("hi");
+        f.setContract(c);
         assertEquals("hi", f.validateAndInvoke(new RpcRequestBean("myid", "iface", "hi"),
                                                new Foo()));
     }
@@ -18,12 +27,14 @@ public class FunctionTest {
     @Test
     public void invokeStringParam() throws Exception {
         Function f = new Function("echo");
+        f.setContract(c);
         assertEquals("yo", f.validateAndInvoke(req("echo", "yo"), new Foo()));
     }
 
     @Test
     public void invokeArrayParam() throws Exception {
         Function f = new Function("add");
+        f.setContract(c);
         assertEquals(10L, f.validateAndInvoke(req("add", new Long[] {1L, 8L, 1L }), new Foo()));
     }
 
