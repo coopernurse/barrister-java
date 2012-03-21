@@ -22,6 +22,7 @@ public class JacksonSerializerTest {
     public void canParseParams() throws Exception {
         Object[][] tests = new Object[][] {
             new Object[] { "\"hi\"", "hi", String.class },
+            new Object[] { "\"hello w\\u00f6rld\"", "hello w\u00f6rld", String.class },
             new Object[] { "12", 12L, Long.class },
             new Object[] { "99.1", 99.1, double.class },
             new Object[] { "true", true, boolean.class },
@@ -41,6 +42,7 @@ public class JacksonSerializerTest {
             if (((Class)t[2]).isArray()) {
                 Object[] exp = (Object[])t[1];
                 Object[] actual = (Object[])val;
+                assertEquals(exp.getClass(), actual.getClass());
                 assertEquals(exp.length, actual.length);
                 for (int x = 0; x < exp.length; x++) {
                     assertEquals(exp[x], actual[x]);
@@ -51,6 +53,14 @@ public class JacksonSerializerTest {
             }
             i++;
         }
+    }
+
+    @Test
+    public void canWriteResponse() throws Exception {
+        String expected = "{\"jsonrpc\":\"2.0\",\"id\":\"1\",\"result\":\"hello w\\u00F6rld\"}";
+        RpcRequest req = new RpcRequestBean("1", "iface", "func");
+        RpcResponse resp = new RpcResponse(req, "hello w\u00f6rld");
+        assertEquals(expected, new String(ser.writeResponse(resp), "utf-8"));
     }
 
 }

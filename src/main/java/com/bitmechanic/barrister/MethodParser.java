@@ -14,11 +14,13 @@ public class MethodParser {
     public MethodParser(String method) {
         int pos = method.indexOf(".");
         if (pos < 1) {
-            throw new IllegalArgumentException("Invalid method: " + method);
+            this.iface = "";
+            this.func = method;
         }
-
-        this.iface = method.substring(0, pos);
-        this.func = method.substring(pos+1);
+        else {
+            this.iface = method.substring(0, pos);
+            this.func = method.substring(pos+1);
+        }
     }
 
     public String getIface() {

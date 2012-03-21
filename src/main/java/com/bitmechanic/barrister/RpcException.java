@@ -1,8 +1,5 @@
 package com.bitmechanic.barrister;
 
-import java.util.Map;
-import java.util.HashMap;
-
 public class RpcException extends Exception {
 
     public enum Error {
@@ -53,16 +50,6 @@ public class RpcException extends Exception {
 
     public Object getData() {
         return data;
-    }
-
-    public Map<String,Object> toMap() {
-        Map<String,Object> map = new HashMap<String,Object>();
-        map.put("code", code);
-        map.put("message", message);
-        if (data != null) {
-            map.put("data", data);
-        }
-        return map;
     }
 
 }

@@ -3,6 +3,8 @@ package com.bitmechanic.barrister;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.lang.reflect.Array;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -18,7 +20,7 @@ public class JacksonRpcRequest implements RpcRequest {
 
     private Iterator<JsonNode> params;
 
-    public JacksonRpcRequest(String json) throws IOException {
+    public JacksonRpcRequest(byte[] json) throws IOException {
         mapper = new ObjectMapper();
         root   = this.mapper.readTree(json);
 
@@ -86,11 +88,12 @@ public class JacksonRpcRequest implements RpcRequest {
                 list.add(convert(n, arrType));
             }
 
-            return list.toArray();
+            //System.out.println("Returning arr: " + Arrays.toString(list.toArray()));
+            return list.toArray((Object[])Array.newInstance(arrType, 0));
         }
         else {
-            if (t == String.class)
-                return p.asText();
+            if (t == String.class) 
+                return p.getTextValue();
             else if (t == Long.class || t == long.class)
                 return p.asLong();
             else if (t == Double.class || t == double.class)

@@ -29,6 +29,10 @@ public class Server {
     }
 
     public RpcResponse call(RpcRequest req) throws RpcException {
+        if (req.getFunc().equals("barrister-idl")) {
+            return new RpcResponse(req, contract.getIdl());
+        }
+
         RpcResponse resp = null;
         try {
             Function func = getFunction(req);
@@ -45,6 +49,7 @@ public class Server {
             resp = new RpcResponse(req, e);
         }
         catch (Throwable t) {
+            t.printStackTrace();
             logger.throwing("Server", "call", t);
             resp = new RpcResponse(req, RpcException.Error.UNKNOWN.exc(t.getMessage()));
         }

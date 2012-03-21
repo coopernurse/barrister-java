@@ -3,6 +3,7 @@ package com.bitmechanic.barrister;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Arrays;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.lang.reflect.ParameterizedType;
@@ -55,6 +56,7 @@ public class Function extends BaseEntity {
             i++;
         }
 
+        //System.out.println("Invoking " + req.getFunc() + " with: " + Arrays.deepToString(params));
         return method.invoke(handler, params);
     }
 

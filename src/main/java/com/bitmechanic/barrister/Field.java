@@ -66,7 +66,7 @@ public class Field extends BaseEntity {
         }
 
         if (wrapArray && isArray) {
-            return "java.util.List<" + t + ">";
+            return t + "[]";
         }
         else {
             return t;
