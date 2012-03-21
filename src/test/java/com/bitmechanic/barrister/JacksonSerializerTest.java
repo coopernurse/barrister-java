@@ -29,7 +29,9 @@ public class JacksonSerializerTest {
             new Object[] { "{ \"x\":\"blah\", \"y\":33 }", 
                            new Person("blah", 33L), Person.class },
             new Object[] { "[1,2,3]", 1L, Long.class },
-            new Object[] { "[[1,2,3]]", new Long[] { 1L, 2L, 3L }, Long[].class } 
+            new Object[] { "[[1,2,3]]", new Long[] { 1L, 2L, 3L }, Long[].class },
+            new Object[] { "{ \"name\":\"trevor\", \"color\":\"blue\" }",
+                           new Cat("trevor", Color.blue), Cat.class }
         };
 
         int i = 0;
@@ -57,12 +59,50 @@ public class JacksonSerializerTest {
 
     @Test
     public void canWriteResponse() throws Exception {
-        String expected = "{\"jsonrpc\":\"2.0\",\"id\":\"1\",\"result\":\"hello w\\u00F6rld\"}";
+        Object[][] tests = new Object[][] {
+            new Object[] { "hello w\u00f6rld", "\"hello w\\u00F6rld\"" },
+            new Object[] { new Cat("lily", Color.white), "{\"color\":\"white\",\"name\":\"lily\"}" }
+        };
+
         RpcRequest req = new RpcRequestBean("1", "iface", "func");
-        RpcResponse resp = new RpcResponse(req, "hello w\u00f6rld");
-        assertEquals(expected, new String(ser.writeResponse(resp), "utf-8"));
+        for (Object[] t : tests) {
+            String expected = "{\"jsonrpc\":\"2.0\",\"id\":\"1\",\"result\":" + t[1] + "}";
+            RpcResponse resp = new RpcResponse(req, t[0]);
+            assertEquals(expected, new String(ser.writeResponse(resp), "utf-8"));
+        }
     }
 
+}
+
+enum Color {
+    blue, black, white
+}
+
+class Cat {
+    Color color;
+    String name;
+
+    public Cat() { } 
+    public Cat(String n, Color c) { name = n; color = c; }
+
+    public String getName() { return name; }
+    public void setName(String n) { name = n; }
+
+    public Color getColor() { return color; }
+    public void setColor(Color c) { color = c; }
+
+    public String toString() { return "Cat: " + color + ", " + name; }
+    public boolean equals(Object other) {
+        if (this == other) { return true; }
+        if (other == null) { return false; }
+        if (!(other instanceof Cat)) { return false; }
+        Cat o = (Cat)other;
+        if (color != o.color && color == null) { return false; }
+        else if (color != null && !color.equals(o.color)) { return false; }
+        if (name != o.name && name == null) { return false; }
+        else if (name != null && !name.equals(o.name)) { return false; }
+        return true;
+    }
 }
 
 class Person {

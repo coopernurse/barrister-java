@@ -39,6 +39,10 @@ public class Function extends BaseEntity {
     }
 
     public Object validateAndInvoke(RpcRequest req, Object handler) throws Exception {
+        if (contract == null) {
+            throw new IllegalStateException("contract cannot be null");
+        }
+
         Method method   = getMethod(handler);
         Class pTypes[]  = method.getParameterTypes();
         Object params[] = new Object[pTypes.length];
@@ -51,12 +55,11 @@ public class Function extends BaseEntity {
             catch (Exception e) {
                 String msg = "Unable to convert param " + req.getIface() + "." +
                     req.getFunc() + "[" + i + "] - " + e.getMessage();
-                throw RpcException.Error.METHOD_NOT_FOUND.exc(msg);
+                throw RpcException.Error.INVALID_PARAMS.exc(msg);
             }
             i++;
         }
 
-        //System.out.println("Invoking " + req.getFunc() + " with: " + Arrays.deepToString(params));
         return method.invoke(handler, params);
     }
 
