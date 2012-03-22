@@ -57,6 +57,14 @@ public class ArrayTypeConverter implements TypeConverter {
             }
             return arr;
         }
+        else if (o instanceof List) {
+            List input = (List)o;
+            Object arr[] = new Object[input.size()];
+            for (int i = 0; i < arr.length; i++) {
+                arr[i] = child.marshal(input.get(i));
+            }
+            return arr;
+        }
         else {
             throw RpcException.Error.INVALID_RESP.exc("Expected array, got: " +
                                                       o.getClass().getSimpleName());

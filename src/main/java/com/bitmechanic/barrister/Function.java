@@ -61,25 +61,20 @@ public class Function extends BaseEntity {
         return marshalResult(method.invoke(handler, reqParams));
     }
 
-    public Object marshalParams(RpcRequest req) throws RpcException {
-        if (params.size() == 1) {
-            return params.get(0).getTypeConverter().marshal(req.getParams());
-        }
-        else {
-            Object[] converted = new Object[params.size()];
-            Object[] reqParams = req.getParamsAsArray();
-            if (reqParams.length != converted.length) {
-                String msg = "Function '" + req.getMethod() + "' expects " + 
+    public Object[] marshalParams(RpcRequest req) throws RpcException {
+        Object[] converted = new Object[params.size()];
+        Object[] reqParams = req.getParams();
+        if (reqParams.length != converted.length) {
+            String msg = "Function '" + req.getMethod() + "' expects " + 
                    params.size() + " param(s). " + reqParams.length + " given.";
-                throw invParams(msg);
-            }
-
-            for (int i = 0; i < converted.length; i++) {
-                converted[i] = params.get(i).getTypeConverter().marshal(reqParams[i]);
-            }
-
-            return converted;
+            throw invParams(msg);
         }
+        
+        for (int i = 0; i < converted.length; i++) {
+            converted[i] = params.get(i).getTypeConverter().marshal(reqParams[i]);
+        }
+        
+        return converted;
     }
 
     public Object unmarshalResult(Object respObj) throws RpcException {
@@ -96,7 +91,11 @@ public class Function extends BaseEntity {
             throw invParams(msg);
         }
 
-        Object reqParams[] = req.getParamsAsArray();
+        return unmarshalParams(req);
+    }
+
+    public Object[] unmarshalParams(RpcRequest req) throws RpcException {
+        Object reqParams[] = req.getParams();
         if (reqParams.length != params.size()) {
             String msg = "Function '" + req.getMethod() + "' expects " + 
                params.size() + " param(s). " + reqParams.length + " given.";
@@ -105,7 +104,7 @@ public class Function extends BaseEntity {
 
         String pkg = contract.getPackage();
 
-        Object convParams[] = new Object[pTypes.length];
+        Object convParams[] = new Object[reqParams.length];
         for (int i = 0; i < convParams.length; i++) {
             convParams[i] = params.get(i).getTypeConverter().unmarshal(pkg, reqParams[i]);
         }

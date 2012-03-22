@@ -77,4 +77,9 @@ public class RpcResponse {
         }
     }
 
+    @Override
+    public String toString() {
+        return "RpcResponse: id=" + id + " error=" + error + " result=" + result;
+    }
+
 }

@@ -7,6 +7,7 @@ import java.net.URLConnection;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.ByteArrayOutputStream;
 
 public class HttpTransport implements Transport {
 
@@ -86,12 +87,19 @@ public class HttpTransport implements Transport {
         URLConnection conn = url.openConnection();
         conn.setDoOutput(true);
 
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        serializer.write(req.marshal(contract), bos);
+        bos.close();
+        byte[] data = bos.toByteArray();
+
         for (String key : headers.keySet()) {
             conn.addRequestProperty(key, headers.get(key));
         }
+
+        conn.addRequestProperty("Content-Length", String.valueOf(data.length));
         
         OutputStream os = conn.getOutputStream();
-        serializer.write(req.marshal(contract), os);
+        os.write(data);
         os.flush();
 
         InputStream is = conn.getInputStream();

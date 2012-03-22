@@ -62,8 +62,17 @@ public class Enum extends BaseEntity implements TypeConverter {
 
     public Object unmarshal(String pkg, Object o) throws RpcException {
         ValidationResult vr = validate(o);
-        if (vr.isValid())
-            return o;
+        if (vr.isValid()) {
+            try {
+                Class clz = Class.forName(contract.getPackage()+"."+name);
+                return java.lang.Enum.valueOf(clz, (String)o);
+            }
+            catch (Exception e) {
+                String msg = "Could not set enum value '" + o + "' - " + 
+                    e.getClass().getSimpleName() + " - " + e.getMessage();
+                throw RpcException.Error.INTERNAL.exc(msg);
+            }
+        }
         else
             throw RpcException.Error.INVALID_PARAMS.exc(vr.getMessage());
     }
@@ -71,7 +80,7 @@ public class Enum extends BaseEntity implements TypeConverter {
     public Object marshal(Object o) throws RpcException {
         if (o == null)
             throw RpcException.Error.INVALID_RESP.exc("enum " + name + " cannot be null");
-        else
+        else 
             return o;
     }
 

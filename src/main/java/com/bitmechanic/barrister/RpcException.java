@@ -65,4 +65,9 @@ public class RpcException extends Exception {
         return map;
     }
 
+    @Override
+    public String toString() {
+        return "RpcException: code=" + code + " message=" + message +
+            " data=" + data;
+    }
 }

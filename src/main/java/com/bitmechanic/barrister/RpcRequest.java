@@ -6,14 +6,28 @@ import java.util.List;
 
 public class RpcRequest {
 
+    private static final Object[] EMPTY_PARAM = new Object[0];
+
     private String id;
     private MethodParser method;
-    private Object params;
+    private Object[] params;
 
     public RpcRequest(String id, String method, Object params) {
         this.id = id;
         this.method = new MethodParser(method);
-        this.params = params;
+
+        if (params == null) {
+            this.params = EMPTY_PARAM;
+        }
+        else if (params instanceof List) {
+            this.params = ((List)params).toArray();
+        }
+        else if (params.getClass().isArray()) {
+            this.params = (Object[])params;
+        }
+        else {
+            this.params = new Object[] { params };
+        }
     }
 
     public RpcRequest(Map map) {
@@ -36,23 +50,8 @@ public class RpcRequest {
         return method.getIface();
     }
 
-    public Object getParams() {
+    public Object[] getParams() {
         return params;
-    }
-
-    public Object[] getParamsAsArray() {
-        if (params == null) {
-            return new Object[0];
-        }
-        else if (params instanceof List) {
-            return ((List)params).toArray();
-        }
-        else if (params.getClass().isArray()) {
-            return (Object[])params;
-        }
-        else {
-            return new Object[] { params };
-        }
     }
 
     @SuppressWarnings("unchecked") 
@@ -65,11 +64,12 @@ public class RpcRequest {
 
         map.put("method", method.getMethod());
 
-        if (params != null) {
+        if (params != null && params.length > 0) {
             Function f = contract.getFunction(getIface(), getFunc());
             map.put("params", f.marshalParams(this));
         }
 
+        System.out.println("req.marshal: " + map);
         return map;
     }
 
