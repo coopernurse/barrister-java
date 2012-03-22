@@ -192,6 +192,54 @@ public class Idl2Java {
         line(0, "");
         line(0, "}");
         toFile(iface);
+
+        String className = iface.getName() + "Client";
+        start(iface);
+        line(0, "public class " + className + " implements " + iface.getName() + " {");
+        line(0, "");
+        line(1, "private com.bitmechanic.barrister.Transport _trans;");
+        line(0, "");
+        line(1, "public " + className + "(com.bitmechanic.barrister.Transport trans) {");
+        line(2, "trans.getContract().setPackage(\"" + pkgName + "\");");
+        line(2, "this._trans = trans;");
+        line(1, "}");
+        for (Function f : iface.getFunctions()) {
+            StringBuilder params = new StringBuilder();
+            StringBuilder paramNames = new StringBuilder();
+            for (Field p : f.getParams()) {
+                if (params.length() > 0) {
+                    params.append(", ");
+                    paramNames.append(", ");
+                }
+                params.append(p.getJavaType()).append(" ").append(p.getName());
+                paramNames.append(p.getName());
+            }
+
+            line(0, "");
+            line(1, "public " + f.getReturns().getJavaType() + " " +
+                 f.getName() + "(" + params + ") throws com.bitmechanic.barrister.RpcException {");
+            if (f.getParams().size() == 0) {
+                line(2, "Object _params = null;");
+            }
+            else if (f.getParams().size() == 1) {
+                line(2, "Object _params = " + f.getParams().get(0).getName() + ";");
+            }
+            else {
+                line(2, "Object _params = new Object[] { " + paramNames + " };");
+            }
+            line(2, "com.bitmechanic.barrister.RpcRequest _req = new com.bitmechanic.barrister.RpcRequest(java.util.UUID.randomUUID().toString(), \"" + iface.getName() + "." + f.getName() + "\", _params);");
+            line(2, "com.bitmechanic.barrister.RpcResponse _resp = this._trans.request(_req);");
+            line(2, "if (_resp.getError() == null) {");
+            line(3, "return (" + f.getReturns().getJavaType() + ")_resp.getResult();");
+            line(2, "}");
+            line(2, "else {");
+            line(3, "throw _resp.getError();");
+            line(2, "}");
+            line(1, "}");
+        }
+        line(0, "");
+        line(0, "}");
+        toFile(className);
     }
 
     private void start(BaseEntity b) {

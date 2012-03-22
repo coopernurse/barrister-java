@@ -2,11 +2,11 @@ package com.bitmechanic.barrister;
 
 import java.util.Map;
 
-public class InProcClient implements Client {
+public class InProcTransport implements Transport {
 
     private Server server;
 
-    public InProcClient(Server s) {
+    public InProcTransport(Server s) {
         this.server = s;
     }
 

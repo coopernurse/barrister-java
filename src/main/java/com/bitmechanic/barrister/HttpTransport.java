@@ -8,14 +8,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-public class HttpClient implements Client {
+public class HttpTransport implements Transport {
 
     private URL url;
     private Serializer serializer;
     private Contract contract;
     private Map<String,String> headers;
 
-    public HttpClient(String endpoint, Serializer serializer) throws IOException {
+    public HttpTransport(String endpoint, Serializer serializer) throws IOException {
         this.url = new URL(endpoint);
         this.serializer = serializer;
         this.headers = new HashMap<String,String>();
@@ -62,7 +62,7 @@ public class HttpClient implements Client {
         return contract;
     }
 
-    public RpcResponse request(RpcRequest req) throws IOException {
+    public RpcResponse request(RpcRequest req) {
         InputStream is = null;
         try {
             is = requestRaw(req);
@@ -70,6 +70,12 @@ public class HttpClient implements Client {
         }
         catch (RpcException e) {
             return new RpcResponse(req, e);
+        }
+        catch (IOException e) {
+            String msg = "IOException requesting " + req.getMethod() + " from: " + url +
+                " - " + e.getMessage();
+            RpcException exc = RpcException.Error.INTERNAL.exc(msg);
+            return new RpcResponse(req, exc);
         }
         finally {
             closeQuietly(is);
