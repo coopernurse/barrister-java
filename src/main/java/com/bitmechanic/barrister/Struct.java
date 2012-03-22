@@ -104,7 +104,7 @@ public class Struct extends BaseEntity implements TypeConverter {
         }
     }
 
-    public Object fromRequest(String pkg, Object o) throws RpcException {
+    public Object unmarshal(String pkg, Object o) throws RpcException {
         if (o == null) {
             return null;
         }
@@ -147,7 +147,7 @@ public class Struct extends BaseEntity implements TypeConverter {
 
                 Object val = input.get(name);
                 if (val != null) {
-                    val = f.getTypeConverter().fromRequest(pkg, val);
+                    val = f.getTypeConverter().unmarshal(pkg, val);
                 
                     try {
                         m.invoke(inst, val);
@@ -165,7 +165,7 @@ public class Struct extends BaseEntity implements TypeConverter {
     }
 
     @SuppressWarnings("unchecked") 
-    public Object toResponse(Object o) throws RpcException {
+    public Object marshal(Object o) throws RpcException {
         if (o == null) {
             return null;
         }
@@ -199,7 +199,7 @@ public class Struct extends BaseEntity implements TypeConverter {
                     }
 
                     if (val != null) {
-                        val = f.getTypeConverter().toResponse(val);
+                        val = f.getTypeConverter().marshal(val);
                         map.put(name, val);
                     }
                 }

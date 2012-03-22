@@ -16,7 +16,7 @@ public class ArrayTypeConverter implements TypeConverter {
         return Array.newInstance(child.getTypeClass(), 0).getClass();
     }
 
-    public Object fromRequest(String pkg, Object o) throws RpcException {
+    public Object unmarshal(String pkg, Object o) throws RpcException {
         if (o == null) {
             return o;
         }
@@ -24,7 +24,7 @@ public class ArrayTypeConverter implements TypeConverter {
             List input = (List)o;
             Object arr[] = (Object[])Array.newInstance(child.getTypeClass(), input.size());
             for (int i = 0; i < arr.length; i++) {
-                arr[i] = child.fromRequest(pkg, input.get(i));
+                arr[i] = child.unmarshal(pkg, input.get(i));
             }
 
             System.out.println("Returning arr: " + arr.getClass() + " - " + Arrays.deepToString(arr));
@@ -34,7 +34,7 @@ public class ArrayTypeConverter implements TypeConverter {
             Object[] input = (Object[])o;
             Object arr[] = (Object[])Array.newInstance(child.getTypeClass(), input.length);
             for (int i = 0; i < arr.length; i++) {
-                arr[i] = child.fromRequest(pkg, input[i]);
+                arr[i] = child.unmarshal(pkg, input[i]);
             }
 
             return arr;
@@ -45,7 +45,7 @@ public class ArrayTypeConverter implements TypeConverter {
         }
     }
 
-    public Object toResponse(Object o) throws RpcException {
+    public Object marshal(Object o) throws RpcException {
         if (o == null) {
             return o;
         }
@@ -53,7 +53,7 @@ public class ArrayTypeConverter implements TypeConverter {
             Object[] input = (Object[])o;
             Object arr[] = new Object[input.length];
             for (int i = 0; i < arr.length; i++) {
-                arr[i] = child.toResponse(input[i]);
+                arr[i] = child.marshal(input[i]);
             }
             return arr;
         }

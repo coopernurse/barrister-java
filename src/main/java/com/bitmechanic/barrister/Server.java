@@ -43,7 +43,7 @@ public class Server {
         handlers.put(iface.getSimpleName(), handler);
     }
 
-    public RpcResponse call(RpcRequest req) throws RpcException {
+    public RpcResponse call(RpcRequest req) {
         if (req.getFunc().equals("barrister-idl")) {
             return new RpcResponse(req, contract.getIdl());
         }
@@ -54,7 +54,7 @@ public class Server {
             Object handler = handlers.get(req.getIface());
             if (handler == null) {
                 String msg = "No implementation of '" + req.getIface() + "' found";
-                throw RpcException.Error.METHOD_NOT_FOUND.exc(msg);
+                return new RpcResponse(req, RpcException.Error.METHOD_NOT_FOUND.exc(msg));
             }
 
             Object result = func.invoke(req, handler);
@@ -64,7 +64,6 @@ public class Server {
             resp = new RpcResponse(req, e);
         }
         catch (Throwable t) {
-            t.printStackTrace();
             logger.throwing("Server", "call", t);
             resp = new RpcResponse(req, RpcException.Error.UNKNOWN.exc(t.getMessage()));
         }
@@ -88,38 +87,5 @@ public class Server {
 
         return func;
     }
-
-    /*
-    private Object serialize(Object result) throws RpcException {
-        if (result == null) {
-            return null;
-        }
-
-        Class clz = result.getClass();
-        if (clz == String.class || clz == Short.class || clz == Integer.class ||
-            clz == Long.class || clz == Float.class || clz == Double.class ||
-            clz == Boolean.class || clz == short.class || clz == int.class ||
-            clz == long.class || clz == float.class || clz == double.class ||
-            clz == boolean.class) {
-
-            return result;
-        }
-        else if (result instanceof List) {
-            List list = (List)result;
-            List tmp = new ArrayList<Object>();
-            for (Object o : list) {
-                tmp.add(serialize(o));
-            }
-            return tmp;
-        }
-        else if (result instanceof BarristerSerializable) {
-            return ((BarristerSerializable)result).serialize();
-        }
-        else {
-            String msg = "Class " + clz.getName() + " is not serializable";
-            throw RpcException.Error.INVALID_RESP.exc(msg);
-        }
-    }
-    */
 
 }

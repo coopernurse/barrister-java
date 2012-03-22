@@ -6,7 +6,7 @@ public class StringTypeConverter implements TypeConverter {
         return String.class;
     }
 
-    public Object fromRequest(String pkg, Object o) throws RpcException {
+    public Object unmarshal(String pkg, Object o) throws RpcException {
         if (o == null || o.getClass() == String.class)
             return o;
         else
@@ -14,8 +14,8 @@ public class StringTypeConverter implements TypeConverter {
                                                         o.getClass().getSimpleName());
     }
 
-    public Object toResponse(Object o) throws RpcException {
-        return fromRequest(null, o);
+    public Object marshal(Object o) throws RpcException {
+        return unmarshal(null, o);
     }
 
 }

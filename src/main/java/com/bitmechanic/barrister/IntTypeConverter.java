@@ -6,7 +6,7 @@ public class IntTypeConverter implements TypeConverter {
         return Long.class;
     }
 
-    public Object fromRequest(String pkg, Object o) throws RpcException {
+    public Object unmarshal(String pkg, Object o) throws RpcException {
         if (o == null)
             return o;
         else {
@@ -21,8 +21,8 @@ public class IntTypeConverter implements TypeConverter {
         }
     }
 
-    public Object toResponse(Object o) throws RpcException {
-        return fromRequest(null, o);
+    public Object marshal(Object o) throws RpcException {
+        return unmarshal(null, o);
     }
 
 }

@@ -60,7 +60,7 @@ public class Enum extends BaseEntity implements TypeConverter {
         }
     }
 
-    public Object fromRequest(String pkg, Object o) throws RpcException {
+    public Object unmarshal(String pkg, Object o) throws RpcException {
         ValidationResult vr = validate(o);
         if (vr.isValid())
             return o;
@@ -68,7 +68,7 @@ public class Enum extends BaseEntity implements TypeConverter {
             throw RpcException.Error.INVALID_PARAMS.exc(vr.getMessage());
     }
 
-    public Object toResponse(Object o) throws RpcException {
+    public Object marshal(Object o) throws RpcException {
         if (o == null)
             throw RpcException.Error.INVALID_RESP.exc("enum " + name + " cannot be null");
         else

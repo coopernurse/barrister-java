@@ -1,7 +1,10 @@
 package com.bitmechanic.barrister;
 
+import java.io.IOException;
+
 public interface Client {
 
-    public RpcResponse request(RpcRequest req) throws RpcException;
+    public Contract getContract();
+    public RpcResponse request(RpcRequest req) throws IOException;
 
 }

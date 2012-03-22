@@ -56,12 +56,37 @@ public class Function extends BaseEntity {
         }
 
         Method method      = getMethod(handler);
-        Object reqParams[] = convertParams(req, method);
+        Object reqParams[] = unmarshalParams(req, method);
 
-        return convertResult(method.invoke(handler, reqParams));
+        return marshalResult(method.invoke(handler, reqParams));
     }
 
-    private Object[] convertParams(RpcRequest req, Method method) throws RpcException {
+    public Object marshalParams(RpcRequest req) throws RpcException {
+        if (params.size() == 1) {
+            return params.get(0).getTypeConverter().marshal(req.getParams());
+        }
+        else {
+            Object[] converted = new Object[params.size()];
+            Object[] reqParams = req.getParamsAsArray();
+            if (reqParams.length != converted.length) {
+                String msg = "Function '" + req.getMethod() + "' expects " + 
+                   params.size() + " param(s). " + reqParams.length + " given.";
+                throw invParams(msg);
+            }
+
+            for (int i = 0; i < converted.length; i++) {
+                converted[i] = params.get(i).getTypeConverter().marshal(reqParams[i]);
+            }
+
+            return converted;
+        }
+    }
+
+    public Object unmarshalResult(Object respObj) throws RpcException {
+        return returns.getTypeConverter().unmarshal(contract.getPackage(), respObj);
+    }
+
+    private Object[] unmarshalParams(RpcRequest req, Method method) throws RpcException {
         Class pTypes[]  = method.getParameterTypes();
         if (params.size() != pTypes.length) {
             String mname = method.getDeclaringClass().getName() + "." + method.getName();
@@ -82,14 +107,14 @@ public class Function extends BaseEntity {
 
         Object convParams[] = new Object[pTypes.length];
         for (int i = 0; i < convParams.length; i++) {
-            convParams[i] = params.get(i).getTypeConverter().fromRequest(pkg, reqParams[i]);
+            convParams[i] = params.get(i).getTypeConverter().unmarshal(pkg, reqParams[i]);
         }
 
         return convParams;
     }
 
-    private Object convertResult(Object res) throws RpcException {
-        return returns.getTypeConverter().toResponse(res);
+    private Object marshalResult(Object res) throws RpcException {
+        return returns.getTypeConverter().marshal(res);
     }
 
     private String getMethodName(RpcRequest req) {

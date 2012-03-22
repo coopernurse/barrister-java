@@ -10,7 +10,11 @@ public class InProcClient implements Client {
         this.server = s;
     }
 
-    public RpcResponse request(RpcRequest req) throws RpcException {
+    public Contract getContract() {
+        return server.getContract();
+    }
+
+    public RpcResponse request(RpcRequest req) {
         return server.call(req);
     }
 

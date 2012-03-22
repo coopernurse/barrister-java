@@ -113,6 +113,20 @@ public class Contract extends BaseEntity {
         return enums;
     }
 
+    public Function getFunction(String iface, String func) throws RpcException {
+        Interface i = interfaces.get(iface);
+        if (i == null) {
+            throw RpcException.Error.METHOD_NOT_FOUND.exc("Interface '" + iface + "' not found");
+        }
+
+        Function f = i.getFunction(func);
+        if (f == null) {
+            throw RpcException.Error.METHOD_NOT_FOUND.exc("Function '" + iface + "." + func + "' not found");
+        }
+
+        return f;
+    }
+
     public ValidationResult validate(String expectedType, Object obj,
                                      boolean allowMissing) {
         if (obj == null) {
