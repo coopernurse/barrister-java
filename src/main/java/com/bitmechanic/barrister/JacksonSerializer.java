@@ -56,6 +56,14 @@ public class JacksonSerializer implements Serializer
         gen.close();
     }
 
+    public void write(List list, OutputStream os) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        JsonGenerator gen = jsonFactory.createJsonGenerator(os);
+        gen.enable(JsonGenerator.Feature.ESCAPE_NON_ASCII);
+        mapper.writeValue(gen, list);
+        gen.close();
+    }
+
     /*
     public RpcRequest readRequest(byte[] input) throws IOException {
         return new JacksonRpcRequest(input);

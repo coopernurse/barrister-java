@@ -13,6 +13,7 @@ public interface Serializer {
     public List readList(InputStream is) throws IOException;
     public Map readMap(InputStream is) throws IOException;
     public void write(Map map, OutputStream os) throws IOException;
+    public void write(List list, OutputStream os) throws IOException;
 
     //RpcRequest readRequest(byte[] input) throws IOException;
     //byte[] writeResponse(RpcResponse resp) throws IOException;
