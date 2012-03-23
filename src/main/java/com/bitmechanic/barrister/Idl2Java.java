@@ -111,13 +111,13 @@ public class Idl2Java {
         line(1, "public String toString() {");
         if (hasParent) {
             line(2, "StringBuilder sb = new StringBuilder(super.toString());");
-            line(2, "sb.append(\"" + s.getName() + ": \");");
+            line(2, "sb.append(\"" + s.getName() + ":\");");
         }
         else {
             line(2, "StringBuilder sb = new StringBuilder(\"" + s.getName() + ":\");");
         }
         for (Field f : s.getFields().values()) {
-            line(2, "sb.append(\" " + f.getName() + "=\").append(" + f.getName() + ").append(\" \");");
+            line(2, "sb.append(\" " + f.getName() + "=\").append(" + f.getName() + ");");
         }
         line(2, "return sb.toString();");
         line(1, "}");
