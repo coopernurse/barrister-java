@@ -3,6 +3,7 @@ package com.bitmechanic.barrister;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
+import java.util.HashSet;
 import java.lang.reflect.Method;
 
 public class Struct extends BaseEntity implements TypeConverter {
@@ -56,45 +57,6 @@ public class Struct extends BaseEntity implements TypeConverter {
         return tmp;
     }
 
-    public ValidationResult validate(Object obj, boolean allowMissing) {
-        if (!(obj instanceof Map)) {
-            String msg = "struct " + name + " val must be Map, got: " + 
-                 obj.getClass().getName();
-            return ValidationResult.invalid(msg);
-        }
-        else {
-            Map map = (Map)obj;
-            Map<String,Field> allFields = getFieldsPlusParents();
-            for (Object keyObj : map.keySet()) {
-                String key = keyObj.toString();
-                if (allFields.containsKey(key)) {
-                    Field field = allFields.get(key);
-                    Object val = map.get(keyObj);
-                    ValidationResult vr = this.contract.validate(field.getType(),
-                                                                 val, allowMissing);
-                    if (!vr.isValid()) {
-                        return vr;
-                    }
-                }
-                else {
-                    String msg = "field '" + key + "' not found in struct " + name;
-                    return ValidationResult.invalid(msg);
-                }
-            }
-
-            if (!allowMissing) {
-                for (String key : allFields.keySet()) {
-                    if (!map.containsKey(key)) {
-                        String msg = "field '" + key + "' missing from: " + name;
-                        return ValidationResult.invalid(msg);
-                    }
-                }
-            }
-
-            return ValidationResult.valid();
-        }
-    }
-
     public Class getTypeClass() {
         try {
             return Class.forName(contract.getPackage() + "." + name);
@@ -145,6 +107,12 @@ public class Struct extends BaseEntity implements TypeConverter {
                     throw RpcException.Error.INVALID_PARAMS.exc(msg);
                 }
 
+                if (!input.containsKey(name)) {
+                    String msg = "field '" + name + "' missing from input value: '" +
+                        input + "'";
+                    throw RpcException.Error.INVALID_PARAMS.exc(msg);
+                }
+
                 Object val = input.get(name);
                 if (val != null) {
                     val = f.getTypeConverter().unmarshal(pkg, val);
@@ -164,7 +132,7 @@ public class Struct extends BaseEntity implements TypeConverter {
         return inst;
     }
 
-    @SuppressWarnings("unchecked") 
+    @SuppressWarnings("unchecked")
     public Object marshal(Object o) throws RpcException {
         if (o == null) {
             return null;

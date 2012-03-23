@@ -15,6 +15,8 @@ public class IntTypeConverter implements TypeConverter {
                 return o;
             else if (c == Integer.class || c == int.class)
                 return ((Integer)o).longValue();
+            else if (c == Short.class || c == short.class)
+                return ((Short)o).shortValue();
             else
                 throw RpcException.Error.INVALID_PARAMS.exc("Expected int, got: " +
                                                             o.getClass().getSimpleName());

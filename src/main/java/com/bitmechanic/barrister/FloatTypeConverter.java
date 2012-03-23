@@ -19,6 +19,8 @@ public class FloatTypeConverter implements TypeConverter {
                 return ((Long)o).doubleValue();
             else if (c == Integer.class || c == int.class)
                 return ((Integer)o).doubleValue();
+            else if (c == Short.class || c == short.class)
+                return ((Short)o).doubleValue();
             else
                 throw RpcException.Error.INVALID_PARAMS.exc("Expected float, got: " +
                                                             o.getClass().getSimpleName());

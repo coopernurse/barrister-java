@@ -11,53 +11,46 @@ import java.util.HashMap;
 public class ValidationTest {
 
     @Test
-    public void stringValidation() {
+    public void stringValidation() throws Exception {
         Object[] valid = { "adsf", "" };
         Object[] invalid = { true, 3, (short)3, (long)3, (float)323, (double)3 };
         validationTest("string", valid, invalid);
     }
 
     @Test
-    public void intValidation() {
+    public void intValidation() throws Exception {
         Object[] valid = { 1, 2L, (short)3 };
         Object[] invalid = { "hi", true, 3.3, (float)3.0 };
         validationTest("int", valid, invalid);
     }
 
     @Test
-    public void floatValidation() {
+    public void floatValidation() throws Exception {
         Object[] valid = { 1, 2L, (short)3, (double)0.3, (float)3.2 };
         Object[] invalid = { "blah", false, true };
         validationTest("float", valid, invalid);
     }
 
     @Test
-    public void boolValidation() {
+    public void boolValidation() throws Exception {
         Object[] valid = { true, false };
         Object[] invalid = { "hi", 1, 392.0, null };
         validationTest("bool", valid, invalid);
     }
 
     @Test
-    public void unknownTypeInvalid() {
-        Contract c = new Contract();
-        Object obj = new HashMap<String,Object>();
-        assertFalse(c.validate("foo", obj, false).isValid());
-    }
-
-    @Test
-    public void structMustBeMap() {
+    public void structMustBeMap() throws Exception {
         Map<String,Object> map = new HashMap<String,Object>();
         map.put("name", "Bob");
         map.put("age", 30);
 
-        Object[] valid = { map };
-        Object[] invalid = { "hi", 1, 392.0, null, true };
+        Object[] valid = { map, null };
+        Object[] invalid = { "hi", 1, 392.0, true };
         validationTest(createPersonContract(), "Person", valid, invalid);
     }
 
     @Test
-    public void structValidatesMembers() {
+    public void structValidatesMembers() throws Exception {
         Map<String,Object> map = new HashMap<String,Object>();
         map.put("name", "Bob");
         map.put("age", "30");
@@ -71,7 +64,7 @@ public class ValidationTest {
     }
 
     @Test
-    public void structValidatesParents() {
+    public void structValidatesParents() throws Exception {
         Map<String,Object> map = new HashMap<String,Object>();
         map.put("name", "Bob");
         map.put("age", "29");
@@ -93,7 +86,7 @@ public class ValidationTest {
     }
 
     @Test
-    public void enumValidatesVals() {
+    public void enumValidatesVals() throws Exception {
         Map<String,Object> map = new HashMap<String,Object>();
         map.put("name", "Bob");
         map.put("age", "29");
@@ -140,23 +133,33 @@ public class ValidationTest {
         return c;
     }
 
-    private void validationTest(String type, Object[] valid, Object[] invalid) {
+    private void validationTest(String type, Object[] valid, Object[] invalid) throws Exception {
         validationTest(new Contract(), type, valid, invalid);
     }
 
     private void validationTest(Contract c, String type, 
-                                Object[] valid, Object[] invalid) {
+                                Object[] valid, Object[] invalid) throws Exception {
+        Field f = new Field("testfield", type);
+        f.setContract(c);
+        TypeConverter tc = f.getTypeConverter();
+        String pkg = "com.bitmechanic.barrister";
+        c.setPackage(pkg);
+
         if (valid != null) {
             for (Object o : valid) {
-                ValidationResult vr = c.validate(type, o, false);
-                assertTrue(vr.getMessage(), vr.isValid());
+                tc.unmarshal(pkg, o);
             }
         }
 
         if (invalid != null) {
             for (Object o : invalid) {
-                ValidationResult vr = c.validate(type, o, false);
-                assertFalse(vr.getMessage(), vr.isValid());
+                try {
+                    tc.unmarshal(pkg, o);
+                    fail("Should not have unmarshalled " + o + " for type " + type);
+                }
+                catch (RpcException e) {
+                    // expected
+                }
             }
         }
     }

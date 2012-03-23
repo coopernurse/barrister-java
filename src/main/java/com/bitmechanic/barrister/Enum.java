@@ -16,6 +16,7 @@ public class Enum extends BaseEntity implements TypeConverter {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public Enum(Map<String,Object> data) {
         super(data);
         values = new ArrayList<String>();
@@ -30,27 +31,6 @@ public class Enum extends BaseEntity implements TypeConverter {
         return values;
     }
 
-    public ValidationResult validate(Object obj) {
-        if (obj == null) {
-            String msg = "Enum value " + name + " cannot be null";
-            return ValidationResult.invalid(msg);
-        }
-        else if (obj.getClass() != String.class) {
-            String msg = "'" + obj + "' enum must be String, got: " + 
-                 obj.getClass().getName();
-            return ValidationResult.invalid(msg);
-        }
-        else {
-            if (values.contains((String)obj)) {
-                return ValidationResult.valid();
-            }
-            else {
-                String msg = "'" + obj + "' is not in enum: " + values;
-                return ValidationResult.invalid(msg);
-            }
-        }
-    }
-
     public Class getTypeClass() {
         try {
             return Class.forName(contract.getPackage() + "." + name);
@@ -60,21 +40,31 @@ public class Enum extends BaseEntity implements TypeConverter {
         }
     }
 
-    public Object unmarshal(String pkg, Object o) throws RpcException {
-        ValidationResult vr = validate(o);
-        if (vr.isValid()) {
+    @SuppressWarnings("unchecked")
+    public Object unmarshal(String pkg, Object obj) throws RpcException {
+        if (obj == null) {
+            return null;
+        }
+        else if (obj.getClass() != String.class) {
+            String msg = "'" + obj + "' enum must be String, got: " + 
+                 obj.getClass().getSimpleName();
+            throw RpcException.Error.INVALID_PARAMS.exc(msg);
+        }
+        else if (values.contains((String)obj)) {
             try {
                 Class clz = Class.forName(contract.getPackage()+"."+name);
-                return java.lang.Enum.valueOf(clz, (String)o);
+                return java.lang.Enum.valueOf(clz, (String)obj);
             }
             catch (Exception e) {
-                String msg = "Could not set enum value '" + o + "' - " + 
+                String msg = "Could not set enum value '" + obj + "' - " + 
                     e.getClass().getSimpleName() + " - " + e.getMessage();
                 throw RpcException.Error.INTERNAL.exc(msg);
             }
         }
-        else
-            throw RpcException.Error.INVALID_PARAMS.exc(vr.getMessage());
+        else {
+            String msg = "'" + obj + "' is not in enum: " + values;
+            throw RpcException.Error.INVALID_PARAMS.exc(msg);
+        }
     }
 
     public Object marshal(Object o) throws RpcException {

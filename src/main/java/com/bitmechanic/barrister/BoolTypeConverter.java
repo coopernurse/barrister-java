@@ -7,7 +7,9 @@ public class BoolTypeConverter implements TypeConverter {
     }
 
     public Object unmarshal(String pkg, Object o) throws RpcException {
-        if (o == null || o.getClass() == Boolean.class || o.getClass() == boolean.class)
+        if (o == null)
+            throw RpcException.Error.INVALID_PARAMS.exc("bool values may not be null");
+        else if (o.getClass() == Boolean.class || o.getClass() == boolean.class)
             return o;
         else
             throw RpcException.Error.INVALID_PARAMS.exc("Expected bool, got: " +

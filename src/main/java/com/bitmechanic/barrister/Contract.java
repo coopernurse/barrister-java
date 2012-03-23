@@ -24,6 +24,7 @@ public class Contract extends BaseEntity {
         return load(idlJson, new JacksonSerializer());
     }
 
+    @SuppressWarnings("unchecked")
     public static Contract load(InputStream idlJson, Serializer ser) throws IOException {
         return new Contract(ser.readList(idlJson));
     }
@@ -116,75 +117,17 @@ public class Contract extends BaseEntity {
     public Function getFunction(String iface, String func) throws RpcException {
         Interface i = interfaces.get(iface);
         if (i == null) {
-            throw RpcException.Error.METHOD_NOT_FOUND.exc("Interface '" + iface + "' not found");
+            String msg = "Interface '" + iface + "' not found";
+            throw RpcException.Error.METHOD_NOT_FOUND.exc(msg);
         }
 
         Function f = i.getFunction(func);
         if (f == null) {
-            throw RpcException.Error.METHOD_NOT_FOUND.exc("Function '" + iface + "." + func + "' not found");
+            String msg = "Function '" + iface + "." + func + "' not found";
+            throw RpcException.Error.METHOD_NOT_FOUND.exc(msg);
         }
 
         return f;
-    }
-
-    public ValidationResult validate(String expectedType, Object obj,
-                                     boolean allowMissing) {
-        if (obj == null) {
-            if (allowMissing) {
-                return new ValidationResult(true, null);
-            }
-            else {
-                return new ValidationResult(false, "value cannot be null");
-            }
-        }
-
-        Class clz = obj.getClass();
-        if (expectedType.equals("string")) {
-            boolean v = clz == String.class;
-            return expectType(v, expectedType, obj);
-        }
-        else if (expectedType.equals("int")) {
-            boolean v = clz == Short.class || clz == Integer.class ||
-                clz == Long.class || clz == short.class || clz == int.class ||
-                clz == long.class;
-            return expectType(v, expectedType, obj);
-        }
-        else if (expectedType.equals("float")) {
-            boolean v = clz == Short.class || clz == Integer.class ||
-                clz == Long.class || clz == Float.class || clz == Double.class ||
-                clz == short.class || clz == int.class || clz == long.class ||
-                clz == float.class || clz == double.class;
-            return expectType(v, expectedType, obj);
-        }
-        else if (expectedType.equals("bool")) {
-            boolean v = clz == Boolean.class || clz == boolean.class;
-            return expectType(v, expectedType, obj);
-        }
-        else {
-            Struct s = structs.get(expectedType);
-            if (s != null) {
-                return s.validate(obj, allowMissing);
-            }
-
-            Enum e = enums.get(expectedType);
-            if (e != null) {
-                return e.validate(obj);
-            }
-
-            return new ValidationResult(false, "Unknown type: " + expectedType);
-        }
-    }
-
-    private ValidationResult expectType(boolean valid, String expectedType,
-                                        Object val) {
-        if (valid) {
-            return new ValidationResult(true, null);
-        }
-        else {
-            return new ValidationResult(false, "Expected " + expectedType + " '" +
-                                        val + "' is type: " + 
-                                        val.getClass().getName());
-        }
     }
 
 }
