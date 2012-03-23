@@ -6,8 +6,11 @@ import javax.servlet.http.HttpServletRequest;
 
 import java.io.File;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.IOException;
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
 import com.bitmechanic.barrister.Contract;
 import com.bitmechanic.barrister.Server;
 import com.bitmechanic.barrister.JacksonSerializer;
@@ -37,16 +40,18 @@ public class ConformServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) 
-        throws IOException {
-
-        InputStream is = req.getInputStream();
-        Map map = serializer.readMap(is);
-        is.close();
-        RpcRequest rpcReq = new RpcRequest(map);
-        
-        resp.addHeader("Content-Type", "application/json");
-        serializer.write(server.call(rpcReq).marshal(), resp.getOutputStream());
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) {
+        try {
+            InputStream is = req.getInputStream();
+            OutputStream os = resp.getOutputStream();
+            resp.addHeader("Content-Type", "application/json");
+            server.call(serializer, is, os);
+            is.close();
+            os.close();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }

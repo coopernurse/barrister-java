@@ -48,6 +48,11 @@ public class JacksonSerializer implements Serializer
         return mapper.readValue(is, List.class);
     }
 
+    public Object readMapOrList(InputStream is) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.readValue(is, Object.class);
+    }
+
     public void write(Map map, OutputStream os) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         JsonGenerator gen = jsonFactory.createJsonGenerator(os);

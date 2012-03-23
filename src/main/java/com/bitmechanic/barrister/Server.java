@@ -2,6 +2,8 @@ package com.bitmechanic.barrister;
 
 import java.lang.reflect.Method;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
@@ -41,6 +43,27 @@ public class Server {
         contract.setPackage(iface.getPackage().getName());
 
         handlers.put(iface.getSimpleName(), handler);
+    }
+
+    @SuppressWarnings("unchecked")
+    public void call(Serializer ser, InputStream is, OutputStream os) 
+        throws IOException {
+
+        Object obj = ser.readMapOrList(is);
+            
+        if (obj instanceof List) {
+            List list = (List)obj;
+            List respList = new ArrayList();
+            for (Object o : list) {
+                RpcRequest rpcReq = new RpcRequest((Map)o);
+                respList.add(call(rpcReq).marshal());
+            }
+            ser.write(respList, os);
+        }
+        else {
+            RpcRequest rpcReq = new RpcRequest((Map)obj);
+            ser.write(call(rpcReq).marshal(), os);
+        }
     }
 
     public RpcResponse call(RpcRequest req) {
