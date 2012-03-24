@@ -8,14 +8,14 @@ public class Field extends BaseEntity {
     private boolean isPrimitive;
     private String type;
 
-    public Field(String name, String type) {
+    public Field(String name, String type, boolean isArray) {
         this.name = name;
-        setType(type);
+        setType(type, isArray);
     }
 
     public Field(Map<String,Object> data) {
         super(data);
-        setType((String)data.get("type"));
+        setType((String)data.get("type"), (Boolean)data.get("is_array"));
     }
 
     public TypeConverter getTypeConverter() throws RpcException {
@@ -56,12 +56,9 @@ public class Field extends BaseEntity {
         }
     }
 
-    private void setType(String type) {
+    private void setType(String type, boolean isArray) {
         this.type = type;
-        if (type.startsWith("[]")) {
-            isArray = true;
-            this.type = type.substring(2);
-        }
+        this.isArray = isArray;
 
         this.isPrimitive = this.type.equals("string") ||
             this.type.equals("float") ||

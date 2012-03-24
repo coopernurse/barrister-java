@@ -14,28 +14,28 @@ public class ValidationTest {
     public void stringValidation() throws Exception {
         Object[] valid = { "adsf", "" };
         Object[] invalid = { true, 3, (short)3, (long)3, (float)323, (double)3 };
-        validationTest("string", valid, invalid);
+        validationTest("string", false, valid, invalid);
     }
 
     @Test
     public void intValidation() throws Exception {
         Object[] valid = { 1, 2L, (short)3 };
         Object[] invalid = { "hi", true, 3.3, (float)3.0 };
-        validationTest("int", valid, invalid);
+        validationTest("int", false, valid, invalid);
     }
 
     @Test
     public void floatValidation() throws Exception {
         Object[] valid = { 1, 2L, (short)3, (double)0.3, (float)3.2 };
         Object[] invalid = { "blah", false, true };
-        validationTest("float", valid, invalid);
+        validationTest("float", false, valid, invalid);
     }
 
     @Test
     public void boolValidation() throws Exception {
         Object[] valid = { true, false };
         Object[] invalid = { "hi", 1, 392.0, null };
-        validationTest("bool", valid, invalid);
+        validationTest("bool", false, valid, invalid);
     }
 
     @Test
@@ -46,7 +46,7 @@ public class ValidationTest {
 
         Object[] valid = { map, null };
         Object[] invalid = { "hi", 1, 392.0, true };
-        validationTest(createPersonContract(), "Person", valid, invalid);
+        validationTest(createPersonContract(), "Person", false, valid, invalid);
     }
 
     @Test
@@ -60,7 +60,7 @@ public class ValidationTest {
         map.put("age", 30);
 
         Object[] invalid = { map, map2 };
-        validationTest(createPersonContract(), "Person", null, invalid);
+        validationTest(createPersonContract(), "Person", false, null, invalid);
     }
 
     @Test
@@ -82,7 +82,7 @@ public class ValidationTest {
 
         Object[] valid = { validMap };
         Object[] invalid = { map, map2 };
-        validationTest(createPersonContract(), "Doctor", valid, invalid);
+        validationTest(createPersonContract(), "Doctor", false, valid, invalid);
     }
 
     @Test
@@ -103,19 +103,19 @@ public class ValidationTest {
 
         Object[] valid = { validMap };
         Object[] invalid = { map, map2 };
-        validationTest(createPersonContract(), "Child", valid, invalid);        
+        validationTest(createPersonContract(), "Child", false, valid, invalid);        
     }
 
     private Contract createPersonContract() {
         Struct s = new Struct("Person", "");
-        s.getFields().put("name", new Field("name", "string"));
-        s.getFields().put("age", new Field("age", "int"));
+        s.getFields().put("name", new Field("name", "string", false));
+        s.getFields().put("age", new Field("age", "int", false));
 
         Struct s2 = new Struct("Doctor", "Person");
-        s2.getFields().put("yearsInPractice", new Field("yearsInPractice", "float"));
+        s2.getFields().put("yearsInPractice", new Field("yearsInPractice", "float", false));
 
         Struct s3 = new Struct("Child", "Person");
-        s3.getFields().put("faveColor", new Field("faveColor", "Color"));
+        s3.getFields().put("faveColor", new Field("faveColor", "Color", false));
 
         Enum e = new Enum("Color", "blue", "green");
 
@@ -133,13 +133,14 @@ public class ValidationTest {
         return c;
     }
 
-    private void validationTest(String type, Object[] valid, Object[] invalid) throws Exception {
-        validationTest(new Contract(), type, valid, invalid);
+    private void validationTest(String type, boolean isArray,
+                                Object[] valid, Object[] invalid) throws Exception {
+        validationTest(new Contract(), type, isArray, valid, invalid);
     }
 
-    private void validationTest(Contract c, String type, 
+    private void validationTest(Contract c, String type, boolean isArray,
                                 Object[] valid, Object[] invalid) throws Exception {
-        Field f = new Field("testfield", type);
+        Field f = new Field("testfield", type, isArray);
         f.setContract(c);
         TypeConverter tc = f.getTypeConverter();
         String pkg = "com.bitmechanic.barrister";

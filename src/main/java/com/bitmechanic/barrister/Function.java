@@ -16,7 +16,7 @@ public class Function extends BaseEntity {
     public Function(String name, String returns) {
         this.name = name;
         this.params = new ArrayList<Field>();
-        this.returns = new Field("", returns);
+        this.returns = new Field("", returns, false);
     }
 
     @SuppressWarnings("unchecked") 
@@ -30,7 +30,7 @@ public class Function extends BaseEntity {
             params.add(new Field(p));
         }
 
-        returns = new Field("", (String)data.get("returns"));
+        returns = new Field("", (String)data.get("returns"), false);
     }
 
     public List<Field> getParams() {
