@@ -41,5 +41,13 @@ public class AImpl implements A {
         r.setHi("hi");
         return r;
     }
+
+    public Long[] repeat_num(Long num, Long count) throws RpcException {
+        Long out[] = new Long[count.intValue()];
+        for (int i = 0; i < out.length; i++) {
+            out[i] = num;
+        }
+        return out;
+    }
     
 }
