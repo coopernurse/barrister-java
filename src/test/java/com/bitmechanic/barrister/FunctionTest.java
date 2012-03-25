@@ -19,14 +19,14 @@ public class FunctionTest {
 
     @Test
     public void invokeEmpty() throws Exception {
-        Function f = new Function("hi", "string");
+        Function f = new Function("hi", "string", false);
         f.setContract(c);
         assertEquals("hi", f.invoke(req("hi", null), new Foo()));
     }
 
     @Test
     public void invokeStringParam() throws Exception {
-        Function f = new Function("echo", "string");
+        Function f = new Function("echo", "string", false);
         f.getParams().add(new Field("a", "string", false));
         f.setContract(c);
         assertEquals("yo", f.invoke(req("echo", "yo"), new Foo()));
@@ -34,7 +34,7 @@ public class FunctionTest {
 
     @Test
     public void invokeArrayParam() throws Exception {
-        Function f = new Function("add", "int");
+        Function f = new Function("add", "int", false);
         f.getParams().add(new Field("a", "int", true));
         f.setContract(c);
         Object param = new Long[] {1L, 8L, 1L };
