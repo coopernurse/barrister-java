@@ -52,7 +52,7 @@ public class LoadContractTest {
         assertEquals("string", fields.get("items").getType());
         assertTrue(fields.get("items").isArray());
         
-        assertEquals(1, c.getEnums().size());
+        assertEquals(2, c.getEnums().size());
                 assertEquals(Arrays.asList("ok", "err"), 
                              c.getEnums().get("Status").getValues());
     }

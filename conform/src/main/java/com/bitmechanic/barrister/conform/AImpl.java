@@ -11,11 +11,17 @@ public class AImpl implements A {
     public Long add(Long a, Long b) throws RpcException {
         return a+b;
     }
-    
-    public Double add_all(Double[] nums) throws RpcException {
+
+    public Double calc(Double[] nums, MathOp op) throws RpcException {
         double total = 0;
+        if (op == MathOp.multiply)
+            total = 1;
+
         for (Double d : nums) {
-            total += d;
+            if (op == MathOp.multiply)
+                total = total * d;
+            else if (op == MathOp.add)
+                total += d;
         }
         return total;
     }
