@@ -49,7 +49,15 @@ public class Server {
     public void call(Serializer ser, InputStream is, OutputStream os) 
         throws IOException {
 
-        Object obj = ser.readMapOrList(is);
+        Object obj = null;
+        try {
+            obj = ser.readMapOrList(is);
+        }
+        catch (Exception e) {
+            String msg = "Unable to deserialize request: " + e.getMessage();
+            ser.write(new RpcResponse(null, RpcException.Error.PARSE.exc(msg)).marshal(), os);
+            return;
+        }
             
         if (obj instanceof List) {
             List list = (List)obj;
@@ -60,9 +68,12 @@ public class Server {
             }
             ser.write(respList, os);
         }
-        else {
+        else if (obj instanceof Map) {
             RpcRequest rpcReq = new RpcRequest((Map)obj);
             ser.write(call(rpcReq).marshal(), os);
+        }
+        else {
+            ser.write(new RpcResponse(null, RpcException.Error.INVALID_REQ.exc("Invalid Request")).marshal(), os);
         }
     }
 

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class Enum extends BaseEntity implements TypeConverter {
+public class Enum extends BaseEntity {
 
     private List<String> values;
 
@@ -29,49 +29,6 @@ public class Enum extends BaseEntity implements TypeConverter {
 
     public List<String> getValues() {
         return values;
-    }
-
-    public Class getTypeClass() {
-        try {
-            return Class.forName(contract.getPackage() + "." + name);
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    public Object unmarshal(String pkg, Object obj) throws RpcException {
-        if (obj == null) {
-            return null;
-        }
-        else if (obj.getClass() != String.class) {
-            String msg = "'" + obj + "' enum must be String, got: " + 
-                 obj.getClass().getSimpleName();
-            throw RpcException.Error.INVALID_PARAMS.exc(msg);
-        }
-        else if (values.contains((String)obj)) {
-            try {
-                Class clz = Class.forName(contract.getPackage()+"."+name);
-                return java.lang.Enum.valueOf(clz, (String)obj);
-            }
-            catch (Exception e) {
-                String msg = "Could not set enum value '" + obj + "' - " + 
-                    e.getClass().getSimpleName() + " - " + e.getMessage();
-                throw RpcException.Error.INTERNAL.exc(msg);
-            }
-        }
-        else {
-            String msg = "'" + obj + "' is not in enum: " + values;
-            throw RpcException.Error.INVALID_PARAMS.exc(msg);
-        }
-    }
-
-    public Object marshal(Object o) throws RpcException {
-        if (o == null)
-            throw RpcException.Error.INVALID_RESP.exc("enum " + name + " cannot be null");
-        else 
-            return o;
     }
 
     @Override

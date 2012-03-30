@@ -4,11 +4,12 @@ import java.util.List;
 import java.util.Arrays;
 import java.lang.reflect.Array;
 
-public class ArrayTypeConverter implements TypeConverter {
+public class ArrayTypeConverter extends BaseTypeConverter {
 
     private TypeConverter child;
 
-    public ArrayTypeConverter(TypeConverter child) {
+    public ArrayTypeConverter(TypeConverter child, boolean isOptional) {
+        super(isOptional);
         this.child = child;
     }
 
@@ -18,7 +19,7 @@ public class ArrayTypeConverter implements TypeConverter {
 
     public Object unmarshal(String pkg, Object o) throws RpcException {
         if (o == null) {
-            return o;
+            return returnNullIfOptional();
         }
         else if (o instanceof List) {
             List input = (List)o;
@@ -47,7 +48,7 @@ public class ArrayTypeConverter implements TypeConverter {
 
     public Object marshal(Object o) throws RpcException {
         if (o == null) {
-            return o;
+            return returnNullIfOptional();
         }
         else if (o.getClass().isArray()) {
             Object[] input = (Object[])o;

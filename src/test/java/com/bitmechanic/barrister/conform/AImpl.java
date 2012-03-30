@@ -55,5 +55,9 @@ public class AImpl implements A {
         }
         return out;
     }
+
+    public String putPerson(Person p) throws RpcException {
+        return p.getPersonId();
+    }
     
 }

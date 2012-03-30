@@ -32,9 +32,10 @@ public class AImpl implements A {
     
     public RepeatResponse repeat(RepeatRequest req1) throws RpcException {
         RepeatResponse r = new RepeatResponse();
+        String s = req1.getForce_uppercase() ? req1.getTo_repeat().toUpperCase() : req1.getTo_repeat();
         List<String> items = new ArrayList<String>();
         for (int i = 0; i < req1.getCount(); i++) {
-            items.add(req1.getTo_repeat());
+            items.add(s);
         }
         r.setItems(items.toArray(new String[0]));
         r.setCount(req1.getCount());
@@ -54,5 +55,9 @@ public class AImpl implements A {
             out[i] = num;
         }
         return out;
+    }
+
+    public String putPerson(Person p) throws RpcException {
+        return p.getPersonId();
     }
 }

@@ -6,7 +6,9 @@ import com.bitmechanic.test.*;
 
 public class BImpl implements B {
     public String echo(String s) throws RpcException {
-        System.out.println("echo=" + s);
-        return s;
+        if (s.equals("return-null"))
+            return null;
+        else
+            return s;
     }
 }

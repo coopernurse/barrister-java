@@ -4,9 +4,8 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
 import java.util.HashSet;
-import java.lang.reflect.Method;
 
-public class Struct extends BaseEntity implements TypeConverter {
+public class Struct extends BaseEntity {
 
     private Map<String, Field> fields;
     private String extend;
@@ -55,130 +54,6 @@ public class Struct extends BaseEntity implements TypeConverter {
             tmp.putAll(parent.getFieldsPlusParents());
         }
         return tmp;
-    }
-
-    public Class getTypeClass() {
-        try {
-            return Class.forName(contract.getPackage() + "." + name);
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public Object unmarshal(String pkg, Object o) throws RpcException {
-        if (o == null) {
-            return null;
-        }
-        else if (!(o instanceof Map)) {
-            String msg = "struct " + name + " val must be Map, got: " + 
-                o.getClass().getName();
-            throw RpcException.Error.INVALID_PARAMS.exc(msg);
-        }
-
-        Object inst;
-        String className = pkg + "." + name;
-        try {
-            Class c = Class.forName(className);
-            inst = c.newInstance();
-        }
-        catch (Exception e) {
-            String msg = "Unable to create: " + className + " - " + 
-               e.getClass().getSimpleName() + ": " + e.getMessage();
-            throw RpcException.Error.INTERNAL.exc(msg);
-        }
-
-        Map input = (Map)o;
-
-        Map<String,Field> allFields = getFieldsPlusParents();
-        Method methods[] = inst.getClass().getMethods();
-        for (Method m : methods) {
-            String name = m.getName();
-            if (name.startsWith("set")) {
-                name = name.substring(3);
-                if (name.length() > 1)
-                    name = name.substring(0,1).toLowerCase() + name.substring(1);
-                else
-                    name = name.toLowerCase();
-
-                Field f = allFields.get(name);
-                if (f == null) {
-                    String msg = "field '" + name + "' missing from: " + this.name;
-                    throw RpcException.Error.INVALID_PARAMS.exc(msg);
-                }
-
-                if (!input.containsKey(name)) {
-                    String msg = "field '" + name + "' missing from input value: '" +
-                        input + "'";
-                    throw RpcException.Error.INVALID_PARAMS.exc(msg);
-                }
-
-                Object val = input.get(name);
-                if (val != null) {
-                    val = f.getTypeConverter().unmarshal(pkg, val);
-                
-                    try {
-                        m.invoke(inst, val);
-                    }
-                    catch (Exception e) {
-                        String msg = "Unable to set field '" + f.getName() +
-                            "' - " + e.getMessage();
-                        throw RpcException.Error.INVALID_PARAMS.exc(msg);
-                    }
-                }
-            }
-        }
-
-        return inst;
-    }
-
-    @SuppressWarnings("unchecked")
-    public Object marshal(Object o) throws RpcException {
-        if (o == null) {
-            return null;
-        }
-        else if (o instanceof BStruct) {
-            Map map = new HashMap();
-            Map<String,Field> allFields = getFieldsPlusParents();
-            Method methods[] = o.getClass().getMethods();
-            for (Method m : methods) {
-                String name = m.getName();
-                if (name.startsWith("get") && !name.equals("getClass")) {
-                    name = name.substring(3);
-                    if (name.length() > 1)
-                        name = name.substring(0,1).toLowerCase() + name.substring(1);
-                    else
-                        name = name.toLowerCase();
-
-                    Field f = allFields.get(name);
-                    if (f == null) {
-                        String msg = "field '" + name + "' missing from: " + this.name;
-                        throw RpcException.Error.INVALID_RESP.exc(msg);
-                    }
-
-                    Object val = null;
-                    try {
-                        val = m.invoke(o);
-                    }
-                    catch (Exception e) {
-                        String msg = this.name + "." + name + 
-                            " unable to invoke getter - " + e.getMessage();
-                        throw RpcException.Error.INTERNAL.exc(msg);
-                    }
-
-                    if (val != null) {
-                        val = f.getTypeConverter().marshal(val);
-                        map.put(name, val);
-                    }
-                }
-            }
-
-            return map;
-        }
-        else {
-            String msg = "Unable to convert class: " + o.getClass().getName();
-            throw RpcException.Error.INVALID_RESP.exc(msg);
-        }
     }
 
 }

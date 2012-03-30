@@ -1,6 +1,10 @@
 package com.bitmechanic.barrister;
 
-public class FloatTypeConverter implements TypeConverter {
+public class FloatTypeConverter extends BaseTypeConverter {
+
+    public FloatTypeConverter(boolean isOptional) {
+        super(isOptional);
+    }
 
     public Class getTypeClass() {
         return Double.class;
@@ -8,7 +12,7 @@ public class FloatTypeConverter implements TypeConverter {
 
     public Object unmarshal(String pkg, Object o) throws RpcException {
         if (o == null)
-            return o;
+            return returnNullIfOptional();
         else {
             Class c = o.getClass();
             if (c == Double.class || c == double.class)

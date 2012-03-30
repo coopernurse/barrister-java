@@ -18,7 +18,7 @@ public class LoadContractTest {
         assertEquals("B", c.getInterfaces().get("B").getName());
 
         Interface i = c.getInterfaces().get("A");
-        assertEquals(6, i.getFunctions().size());
+        assertEquals(7, i.getFunctions().size());
         Function f = i.getFunctions().get(0);
         assertEquals(2, f.getParams().size());
         assertEquals("a", f.getParams().get(0).getName());
@@ -31,7 +31,7 @@ public class LoadContractTest {
         assertEquals(0, f.getParams().size());
         assertEquals("HiResponse", f.getReturns().getType());
 
-        assertEquals(4, c.getStructs().size());
+        assertEquals(5, c.getStructs().size());
 
         Struct s = c.getStructs().get("Response");
         Map<String,Field> fields = s.getFields();

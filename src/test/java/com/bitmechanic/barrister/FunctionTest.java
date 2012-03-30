@@ -17,25 +17,29 @@ public class FunctionTest {
         c.setValidateResponse(false);
     }
 
+    private Field returnField(String type) {
+        return new Field("", type, false, false);
+    }
+
     @Test
     public void invokeEmpty() throws Exception {
-        Function f = new Function("hi", "string", false);
+        Function f = new Function("hi", returnField("string"));
         f.setContract(c);
         assertEquals("hi", f.invoke(req("hi", null), new Foo()));
     }
 
     @Test
     public void invokeStringParam() throws Exception {
-        Function f = new Function("echo", "string", false);
-        f.getParams().add(new Field("a", "string", false));
+        Function f = new Function("echo", returnField("string"));
+        f.getParams().add(new Field("a", "string", false, false));
         f.setContract(c);
         assertEquals("yo", f.invoke(req("echo", "yo"), new Foo()));
     }
 
     @Test
     public void invokeArrayParam() throws Exception {
-        Function f = new Function("add", "int", false);
-        f.getParams().add(new Field("a", "int", true));
+        Function f = new Function("add", returnField("int"));
+        f.getParams().add(new Field("a", "int", true, false));
         f.setContract(c);
         Object param = new Long[] {1L, 8L, 1L };
         assertEquals(10L, f.invoke(req("add", asList(param)), new Foo()));

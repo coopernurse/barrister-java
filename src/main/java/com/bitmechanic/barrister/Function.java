@@ -13,10 +13,10 @@ public class Function extends BaseEntity {
     private List<Field> params;
     private Field returns;
 
-    public Function(String name, String returns, boolean isArray) {
+    public Function(String name, Field returns) {
         this.name = name;
         this.params = new ArrayList<Field>();
-        this.returns = new Field("", returns, isArray);
+        this.returns = returns;
     }
 
     @SuppressWarnings("unchecked") 
@@ -31,7 +31,8 @@ public class Function extends BaseEntity {
         }
 
         Map retMap = (Map)data.get("returns");
-        returns = new Field("", (String)retMap.get("type"), (Boolean)retMap.get("is_array"));
+        returns = new Field("", (String)retMap.get("type"), 
+                            (Boolean)retMap.get("is_array"), (Boolean)retMap.get("optional"));
     }
 
     public List<Field> getParams() {

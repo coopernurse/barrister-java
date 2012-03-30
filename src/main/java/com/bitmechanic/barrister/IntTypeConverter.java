@@ -1,6 +1,10 @@
 package com.bitmechanic.barrister;
 
-public class IntTypeConverter implements TypeConverter {
+public class IntTypeConverter extends BaseTypeConverter {
+
+    public IntTypeConverter(boolean isOptional) {
+        super(isOptional);
+    }
 
     public Class getTypeClass() {
         return Long.class;
@@ -8,7 +12,7 @@ public class IntTypeConverter implements TypeConverter {
 
     public Object unmarshal(String pkg, Object o) throws RpcException {
         if (o == null)
-            return o;
+            return returnNullIfOptional();
         else {
             Class c = o.getClass();
             if (c == Long.class || c == long.class)

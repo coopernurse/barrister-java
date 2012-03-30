@@ -110,9 +110,9 @@ public class Client {
             
         try {
             Object paramsObj = mapper.readValue(params, Object.class);
-            System.out.println("paramsObj: " + 
-                               paramsObj.getClass().getSimpleName() + " - " + 
-                               paramsObj);
+            //System.out.println("paramsObj: " + 
+            //                   paramsObj == null ? null : paramsObj.getClass().getSimpleName() + " - " + 
+            //                   paramsObj);
             
             String meth = iface+"."+func;
             RpcRequest req = new RpcRequest(id, meth, paramsObj);
@@ -139,6 +139,7 @@ public class Client {
             respObj = e.getCode();
         }
         catch (Throwable t) {
+            t.printStackTrace();
             System.out.println("ERR: " + t.getClass().getSimpleName() + 
                                ": " + t.getMessage());
             status = "err";

@@ -13,6 +13,10 @@ public abstract class BaseEntity {
     }
 
     public BaseEntity(Map<String, Object> obj) {
+        if (obj == null) {
+            throw new IllegalArgumentException("Map cannot be null!");
+        }
+
         if (obj.containsKey("name")) {
             name = (String)obj.get("name");
         }

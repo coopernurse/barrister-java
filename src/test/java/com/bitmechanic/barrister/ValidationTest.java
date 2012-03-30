@@ -44,7 +44,7 @@ public class ValidationTest {
         map.put("name", "Bob");
         map.put("age", 30);
 
-        Object[] valid = { map, null };
+        Object[] valid = { map };
         Object[] invalid = { "hi", 1, 392.0, true };
         validationTest(createPersonContract(), "Person", false, valid, invalid);
     }
@@ -101,21 +101,25 @@ public class ValidationTest {
         validMap.put("age", 30);
         validMap.put("faveColor", "blue");
 
-        Object[] valid = { validMap };
+        Map<String,Object> validMap2 = new HashMap<String,Object>();
+        validMap2.put("name", "Mary");
+        validMap2.put("faveColor", "blue");
+
+        Object[] valid = { validMap, validMap2 };
         Object[] invalid = { map, map2 };
         validationTest(createPersonContract(), "Child", false, valid, invalid);        
     }
 
     private Contract createPersonContract() {
         Struct s = new Struct("Person", "");
-        s.getFields().put("name", new Field("name", "string", false));
-        s.getFields().put("age", new Field("age", "int", false));
+        s.getFields().put("name", new Field("name", "string", false, false));
+        s.getFields().put("age", new Field("age", "int", false, true));  
 
         Struct s2 = new Struct("Doctor", "Person");
-        s2.getFields().put("yearsInPractice", new Field("yearsInPractice", "float", false));
+        s2.getFields().put("yearsInPractice", new Field("yearsInPractice", "float", false, false));
 
         Struct s3 = new Struct("Child", "Person");
-        s3.getFields().put("faveColor", new Field("faveColor", "Color", false));
+        s3.getFields().put("faveColor", new Field("faveColor", "Color", false, false));
 
         Enum e = new Enum("Color", "blue", "green");
 
@@ -140,7 +144,7 @@ public class ValidationTest {
 
     private void validationTest(Contract c, String type, boolean isArray,
                                 Object[] valid, Object[] invalid) throws Exception {
-        Field f = new Field("testfield", type, isArray);
+        Field f = new Field("testfield", type, isArray, false);
         f.setContract(c);
         TypeConverter tc = f.getTypeConverter();
         String pkg = "com.bitmechanic.barrister";
@@ -163,5 +167,19 @@ public class ValidationTest {
                 }
             }
         }
+
+        // test nulls
+        try {
+             tc.unmarshal(pkg, null);
+             fail("Should not have unmarshalled null for type " + type);
+        }
+        catch (RpcException e) {
+            // ok
+        }
+        
+        f = new Field("testfield2", type, isArray, true);
+        f.setContract(c);
+        tc = f.getTypeConverter();
+        assertNull(tc.unmarshal(pkg, null));
     }
 }
