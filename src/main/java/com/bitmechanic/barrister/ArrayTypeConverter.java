@@ -4,10 +4,20 @@ import java.util.List;
 import java.util.Arrays;
 import java.lang.reflect.Array;
 
+/**
+ * TypeConverter implementation for array types. This class wraps the 
+ * TypeConverter for the actual type (e.g. IntTypeConverter, StructTypeConverter)
+ * and uses it to marshal/unmarshal the elements in the array.
+ */
 public class ArrayTypeConverter extends BaseTypeConverter {
 
     private TypeConverter child;
 
+    /**
+     * @param child TypeConverter to delegate to for marshaling/unmarshaling 
+     *        elements in the array
+     * @param isOptional If true, null arrays are permitted
+     */
     public ArrayTypeConverter(TypeConverter child, boolean isOptional) {
         super(isOptional);
         this.child = child;
