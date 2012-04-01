@@ -10,6 +10,9 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
+/**
+ * Dispatches incoming RpcRequests to your application code.
+ */
 public class Server {
 
     private static Logger logger = Logger.getLogger("barrister");
@@ -17,15 +20,35 @@ public class Server {
     private Contract contract;
     private Map<String, Object> handlers;    
 
+    /**
+     * Creates a new Server for the given Contract
+     */
     public Server(Contract c) {
+        if (c == null) {
+            throw new IllegalArgumentException("Contract cannot be null");
+        }
+
         this.contract = c;
         this.handlers = new HashMap<String,Object>();
     }
 
+    /** 
+     * Returns the Contract associated with this server
+     */
     public Contract getContract() {
         return this.contract;
     }
 
+    /**
+     * Associates the handler instance with the given IDL interface.  Replaces
+     * an existing handler for this iface if one was previously registered.
+     *
+     * @param iface Interface class that this handler implements.  This is usually
+     *        an Idl2Java generated interface Class
+     * @param handler Object that implements iface.  Generally one of your application classes
+     * @throws IllegalArgumentException if iface is not an interface on this Server's Contract
+     *         or if handler cannot be cast to iface
+     */
     public void addHandler(Class iface, Object handler) {
         try {
             iface.cast(handler);
@@ -45,6 +68,17 @@ public class Server {
         handlers.put(iface.getSimpleName(), handler);
     }
 
+    /**
+     * Reads a RpcRequest from the input stream, deserializes it, invokes
+     * the matching handler method, serializes the result, and writes it to the output stream.
+     *
+     * @param ser Serializer to use to decode the request from the input stream, and serialize
+     *        the result to the the output stream
+     * @param is InputStream to read the request from
+     * @param os OutputStream to write the response to
+     * @throws IOException If there is a problem reading or writing to either stream, or if the
+     *         request cannot be deserialized.
+     */
     @SuppressWarnings("unchecked")
     public void call(Serializer ser, InputStream is, OutputStream os) 
         throws IOException {
@@ -77,6 +111,12 @@ public class Server {
         }
     }
 
+    /**
+     * Calls the method associated with the RpcRequest and wraps the result as a RpcResponse
+     *
+     * @param req Request to process
+     * @return RpcResponse that pairs with this request.  May contain a result or an error
+     */
     public RpcResponse call(RpcRequest req) {
         if (req.getFunc().equals("barrister-idl")) {
             return new RpcResponse(req, contract.getIdl());

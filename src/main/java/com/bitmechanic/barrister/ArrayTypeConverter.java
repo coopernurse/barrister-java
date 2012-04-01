@@ -27,7 +27,7 @@ public class ArrayTypeConverter extends BaseTypeConverter {
         return Array.newInstance(child.getTypeClass(), 0).getClass();
     }
 
-    public Object unmarshal(String pkg, Object o) throws RpcException {
+    public Object unmarshal(Object o) throws RpcException {
         if (o == null) {
             return returnNullIfOptional();
         }
@@ -35,7 +35,7 @@ public class ArrayTypeConverter extends BaseTypeConverter {
             List input = (List)o;
             Object arr[] = (Object[])Array.newInstance(child.getTypeClass(), input.size());
             for (int i = 0; i < arr.length; i++) {
-                arr[i] = child.unmarshal(pkg, input.get(i));
+                arr[i] = child.unmarshal(input.get(i));
             }
 
             System.out.println("Returning arr: " + arr.getClass() + " - " + Arrays.deepToString(arr));
@@ -45,7 +45,7 @@ public class ArrayTypeConverter extends BaseTypeConverter {
             Object[] input = (Object[])o;
             Object arr[] = (Object[])Array.newInstance(child.getTypeClass(), input.length);
             for (int i = 0; i < arr.length; i++) {
-                arr[i] = child.unmarshal(pkg, input[i]);
+                arr[i] = child.unmarshal(input[i]);
             }
 
             return arr;

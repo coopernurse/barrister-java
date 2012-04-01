@@ -3,7 +3,7 @@ package com.bitmechanic.barrister;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import java.io.InputStream;
-import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -52,9 +52,11 @@ public class LoadContractTest {
         assertEquals("string", fields.get("items").getType());
         assertTrue(fields.get("items").isArray());
         
+        HashSet<String> expected = new HashSet<String>();
+        expected.add("ok");
+        expected.add("err");
         assertEquals(2, c.getEnums().size());
-                assertEquals(Arrays.asList("ok", "err"), 
-                             c.getEnums().get("Status").getValues());
+        assertEquals(expected, c.getEnums().get("Status").getValues());
     }
 
 }

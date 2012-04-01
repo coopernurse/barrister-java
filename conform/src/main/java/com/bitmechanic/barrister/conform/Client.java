@@ -15,7 +15,6 @@ import org.codehaus.jackson.JsonFactory;
 import com.bitmechanic.barrister.RpcRequest;
 import com.bitmechanic.barrister.RpcResponse;
 import com.bitmechanic.barrister.HttpTransport;
-import com.bitmechanic.barrister.JacksonSerializer;
 import com.bitmechanic.barrister.Contract;
 import com.bitmechanic.barrister.RpcException;
 import com.bitmechanic.barrister.Batch;
@@ -34,7 +33,6 @@ public class Client {
     PrintWriter out;
     ObjectMapper mapper;
     JsonFactory jsonFactory;
-    JacksonSerializer ser;
     HttpTransport trans;
     Contract con;
     Batch batch;
@@ -49,8 +47,7 @@ public class Client {
         jsonFactory = new JsonFactory();
         mapper = new ObjectMapper();
 
-        ser = new JacksonSerializer();
-        trans = new HttpTransport("http://127.0.0.1:9233/", ser);
+        trans = new HttpTransport("http://127.0.0.1:9233/");
         con = trans.getContract();
         con.setPackage("com.bitmechanic.test");
 

@@ -1,5 +1,8 @@
 package com.bitmechanic.barrister;
 
+/**
+ * TypeConverter for IDL 'int' type. Marshals to and from the Java Long type.
+ */
 public class IntTypeConverter extends BaseTypeConverter {
 
     public IntTypeConverter(boolean isOptional) {
@@ -10,7 +13,10 @@ public class IntTypeConverter extends BaseTypeConverter {
         return Long.class;
     }
 
-    public Object unmarshal(String pkg, Object o) throws RpcException {
+    /**
+     * Accepts short, int, and long values.  Other types will result in a RpcException
+     */
+    public Object unmarshal(Object o) throws RpcException {
         if (o == null)
             return returnNullIfOptional();
         else {
@@ -28,7 +34,7 @@ public class IntTypeConverter extends BaseTypeConverter {
     }
 
     public Object marshal(Object o) throws RpcException {
-        return unmarshal(null, o);
+        return unmarshal(o);
     }
 
 }

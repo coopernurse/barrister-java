@@ -4,6 +4,10 @@ import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
 
+/**
+ * In process transport implementation.  Bypasses serialization and the network and
+ * calls the server directly.  
+ */
 public class InProcTransport implements Transport {
 
     private Server server;

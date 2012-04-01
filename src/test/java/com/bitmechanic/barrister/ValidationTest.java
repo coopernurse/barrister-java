@@ -152,14 +152,14 @@ public class ValidationTest {
 
         if (valid != null) {
             for (Object o : valid) {
-                tc.unmarshal(pkg, o);
+                tc.unmarshal(o);
             }
         }
 
         if (invalid != null) {
             for (Object o : invalid) {
                 try {
-                    tc.unmarshal(pkg, o);
+                    tc.unmarshal(o);
                     fail("Should not have unmarshalled " + o + " for type " + type);
                 }
                 catch (RpcException e) {
@@ -170,7 +170,7 @@ public class ValidationTest {
 
         // test nulls
         try {
-             tc.unmarshal(pkg, null);
+             tc.unmarshal(null);
              fail("Should not have unmarshalled null for type " + type);
         }
         catch (RpcException e) {
@@ -180,6 +180,6 @@ public class ValidationTest {
         f = new Field("testfield2", type, isArray, true);
         f.setContract(c);
         tc = f.getTypeConverter();
-        assertNull(tc.unmarshal(pkg, null));
+        assertNull(tc.unmarshal(null));
     }
 }

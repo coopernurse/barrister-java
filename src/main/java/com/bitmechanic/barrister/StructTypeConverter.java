@@ -4,15 +4,32 @@ import java.util.Map;
 import java.util.HashMap;
 import java.lang.reflect.Method;
 
+/**
+ * TypeConverter for user defined 'struct' types.  Native types are usually Java POJOs
+ * created by Idl2Java.
+ */
 public class StructTypeConverter extends BaseTypeConverter {
 
     private Struct s;
 
+    /**
+     * Creates a new StructTypeConverter for the given IDL Struct
+     *
+     * @param s Struct to convert for
+     * @param isOptional If true then this struct may be null.  Does not mean that
+     *        its members may be null (that's delegated to the TypeConverters hung off each
+     *        Field)
+     */
     public StructTypeConverter(Struct s, boolean isOptional) {
         super(isOptional);
         this.s = s;
     }
 
+    /**
+     * Returns the Class that matches: Contract.packageName + "." + Struct.name
+     *
+     * In the common case this will result in an Idl2Java generated Class.
+     */
     public Class getTypeClass() {
         try {
             return Class.forName(s.getContract().getPackage() + "." + s.getName());
@@ -22,7 +39,14 @@ public class StructTypeConverter extends BaseTypeConverter {
         }
     }
 
-    public Object unmarshal(String pkg, Object o) throws RpcException {
+    /**
+     * Converts o from a Map back to the Java Class associated with this Struct.
+     * Recursively unmarshals all the members of the map.
+     *
+     * @param o Map to unmarshal
+     * @throws RpcException If o does not comply with the IDL definition for this Struct
+     */
+    public Object unmarshal(Object o) throws RpcException {
         if (o == null) {
             return returnNullIfOptional();
         }
@@ -34,13 +58,11 @@ public class StructTypeConverter extends BaseTypeConverter {
 
         String name = s.getName();
         Object inst;
-        String className = pkg + "." + name;
         try {
-            Class c = Class.forName(className);
-            inst = c.newInstance();
+            inst = getTypeClass().newInstance();
         }
         catch (Exception e) {
-            String msg = "Unable to create: " + className + " - " + 
+            String msg = "Unable to create: " + 
                e.getClass().getSimpleName() + ": " + e.getMessage();
             throw RpcException.Error.INTERNAL.exc(msg);
         }
@@ -78,7 +100,7 @@ public class StructTypeConverter extends BaseTypeConverter {
                 }
 
                 Object val = input.get(name);
-                val = f.getTypeConverter().unmarshal(pkg, val);
+                val = f.getTypeConverter().unmarshal(val);
                 
                 try {
                     m.invoke(inst, val);
@@ -94,6 +116,16 @@ public class StructTypeConverter extends BaseTypeConverter {
         return inst;
     }
 
+    /**
+     * Marshals native Java type o to a Map that can be serialized.
+     * Recursively marshals all of the Struct fields from o onto the map.
+     *
+     * @param o Java object to marshal to Map
+     * @return Map containing the marshaled data
+     * @throws RpcException If o does not validate against the Struct spec in the IDL.
+     *         The most common validation error will be null properties on o for Struct
+     *         fields that are not marked optional.
+     */
     @SuppressWarnings("unchecked")
     public Object marshal(Object o) throws RpcException {
         if (o == null) {

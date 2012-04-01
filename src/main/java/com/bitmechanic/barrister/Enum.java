@@ -1,25 +1,38 @@
 package com.bitmechanic.barrister;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.Map;
+import java.util.List;
 
+/**
+ * Represents an 'enum' in the IDL
+ */
 public class Enum extends BaseEntity {
 
-    private List<String> values;
+    private Set<String> values;
 
+    /**
+     * Creates an enum with the given name and values
+     *
+     * @param name Name of enum from IDL
+     * @param vals Valid values for enum from IDL
+     */
     public Enum(String name, String... vals) {
         this.name = name;
-        this.values = new ArrayList<String>();
+        this.values = new LinkedHashSet<String>();
         for (String v : vals) {
             values.add(v);
         }
     }
 
+    /**
+     * Creates an enum from IDL Map representation, parsing the 'name', 'comment', and 'values'
+     */
     @SuppressWarnings("unchecked")
     public Enum(Map<String,Object> data) {
         super(data);
-        values = new ArrayList<String>();
+        values = new LinkedHashSet<String>();
         
         List<Map<String,Object>> dvals = (List<Map<String,Object>>)data.get("values");
         for (Map<String,Object> val : dvals) {
@@ -27,7 +40,10 @@ public class Enum extends BaseEntity {
         }
     }
 
-    public List<String> getValues() {
+    /**
+     * Returns the list of values for this enum
+     */
+    public Set<String> getValues() {
         return values;
     }
 

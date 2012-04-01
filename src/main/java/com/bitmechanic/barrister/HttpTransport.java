@@ -11,6 +11,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.ByteArrayOutputStream;
 
+/**
+ * Client Transport implementation that uses HTTP(S)
+ */
 public class HttpTransport implements Transport {
 
     private URL url;
@@ -18,18 +21,43 @@ public class HttpTransport implements Transport {
     private Contract contract;
     private Map<String,String> headers;
 
-    public HttpTransport(String endpoint, Serializer serializer) throws IOException {
+    /**
+     * Creates a new HttpTransport using an empty header list and the JacksonSerializer.
+     *
+     * @param endpoint URL of the Barrister server to consume
+     * @throws IOException If there is a problem loading the IDL from the endpoint
+     */
+    public HttpTransport(String endpoint) throws IOException {
+        this(endpoint, null, new JacksonSerializer());
+    }
+
+    /**
+     * Creates a new HttpTransport.  When this constructor is called, the Contract for the
+     * given endpoint URL will be immediately requested.
+     *
+     * @param endpoint URL of the Barrister server to consume
+     * @param headers HTTP headers to add to requests against this transport. For example,
+     *        "Authorization"
+     * @param serializer Serializer to use with this transport
+     * @throws IOException If there is a problem loading the IDL from the endpoint
+     */
+    public HttpTransport(String endpoint, Map<String,String> headers, Serializer serializer) 
+        throws IOException {
+
+        if (headers == null) {
+            headers = new HashMap<String,String>();
+        }
+
         this.url = new URL(endpoint);
         this.serializer = serializer;
-        this.headers = new HashMap<String,String>();
+        this.headers = headers;
         this.headers.put("Content-Type", "application/json");
         loadContract();
     }
 
-    public void setHeader(String key, String val) {
-        headers.put(key, val);
-    }
-
+    /**
+     * Returns the HTTP headers associated with this Transport
+     */
     public Map<String,String> getHeaders() {
         return headers;
     }
@@ -68,10 +96,17 @@ public class HttpTransport implements Transport {
         }
     }
 
+    /**
+     * Returns the Contract associated with this transport.  This is loaded
+     * from the server endpoint in the constructor.
+     */
     public Contract getContract() {
         return contract;
     }
 
+    /**
+     * Makes a RPC call via HTTP(S) to the remote server
+     */
     public RpcResponse request(RpcRequest req) {
         InputStream is = null;
         try {
@@ -97,6 +132,9 @@ public class HttpTransport implements Transport {
         }
     }
 
+    /**
+     * Makes JSON-RPC batch request against the remote server as a single HTTP request.
+     */
     @SuppressWarnings("unchecked")
     public List<RpcResponse> request(List<RpcRequest> reqList) {
         List<RpcResponse> respList = new ArrayList<RpcResponse>();

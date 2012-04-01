@@ -13,8 +13,6 @@ public class FunctionTest {
 
     public FunctionTest() {
         c = new Contract();
-        c.setValidateRequest(false);
-        c.setValidateResponse(false);
     }
 
     private Field returnField(String type) {

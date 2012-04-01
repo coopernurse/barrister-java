@@ -1,5 +1,9 @@
 package com.bitmechanic.barrister;
 
+/**
+ * TypeConverter for IDL primitive 'string' type.  Does not do any implicit type 
+ * conversion.
+ */
 public class StringTypeConverter extends BaseTypeConverter {
 
     public StringTypeConverter(boolean isOptional) {
@@ -10,7 +14,7 @@ public class StringTypeConverter extends BaseTypeConverter {
         return String.class;
     }
 
-    public Object unmarshal(String pkg, Object o) throws RpcException {
+    public Object unmarshal(Object o) throws RpcException {
         if (o == null)
             return returnNullIfOptional();
         else if (o.getClass() == String.class)
@@ -21,7 +25,7 @@ public class StringTypeConverter extends BaseTypeConverter {
     }
 
     public Object marshal(Object o) throws RpcException {
-        return unmarshal(null, o);
+        return unmarshal(o);
     }
 
 }

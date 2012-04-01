@@ -1,5 +1,8 @@
 package com.bitmechanic.barrister;
 
+/**
+ * TypeConverter for Enum types. 
+ */
 public class EnumTypeConverter extends BaseTypeConverter {
 
     private Enum e;
@@ -18,8 +21,11 @@ public class EnumTypeConverter extends BaseTypeConverter {
         }
     }
 
+    /**
+     * Enforces that obj is a String contained in the Enum's values list
+     */
     @SuppressWarnings("unchecked")
-    public Object unmarshal(String pkg, Object obj) throws RpcException {
+    public Object unmarshal(Object obj) throws RpcException {
         if (obj == null) {
             return returnNullIfOptional();
         }
@@ -30,7 +36,7 @@ public class EnumTypeConverter extends BaseTypeConverter {
         }
         else if (e.getValues().contains((String)obj)) {
             try {
-                Class clz = Class.forName(e.getContract().getPackage()+"."+e.getName());
+                Class clz = getTypeClass();
                 return java.lang.Enum.valueOf(clz, (String)obj);
             }
             catch (Exception e) {

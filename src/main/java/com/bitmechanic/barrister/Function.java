@@ -6,19 +6,30 @@ import java.util.Map;
 import java.util.Arrays;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.InvocationTargetException;
 
+/**
+ * Returns a single function in an Interface.
+ */
 public class Function extends BaseEntity {    
 
     private List<Field> params;
     private Field returns;
 
+    /**
+     * Creates a Function with the given name and return type.  
+     * Creates an empty param list.
+     */
     public Function(String name, Field returns) {
         this.name = name;
         this.params = new ArrayList<Field>();
         this.returns = returns;
     }
 
+    /**
+     * Creates a Function based on the parsed IDL Map representation.
+     * Uses keys: 'name', 'comment', 'params', 'returns'
+     */
     @SuppressWarnings("unchecked") 
     public Function(Map<String,Object> data) {
         super(data);
@@ -35,14 +46,24 @@ public class Function extends BaseEntity {
                             (Boolean)retMap.get("is_array"), (Boolean)retMap.get("optional"));
     }
 
+    /**
+     * Returns the parameters for this Function
+     */
     public List<Field> getParams() {
         return params;
     }
 
+    /**
+     * Returns the return type for this Function
+     */
     public Field getReturns() {
         return returns;
     }
 
+    /**
+     * Sets the Contract for this Function.  Propegates this down to its param and
+     * return Fields
+     */
     @Override
     public void setContract(Contract c) {
         super.setContract(c);
@@ -52,9 +73,30 @@ public class Function extends BaseEntity {
         returns.setContract(c);
     }
 
-    public Object invoke(RpcRequest req, Object handler) throws Exception {
+    /**
+     * Invokes this Function against the given handler Class for the given request. 
+     * This is the heart of the RPC dispatch, and is where your application code gets run.
+     *
+     * @param req Request to invoke against handler. The req.params will be unmarshaled and
+     *        used when calling the Java method on handler.
+     * @param handler Your application class that implements the given interface.  The method
+     *        on handler that matches this Function's name will be invoked.
+     * @return Result of Java method invocation, marshaled to its RPC result type
+     * @throws RpcException If the req.params do not match the parameters for this function as
+     *         specified in the IDL
+     * @throws IllegalAccessException If there is a problem invoking the method on handler
+     * @throws InvocationTargetException If there is a problem invoking the method on handler
+     */
+    public Object invoke(RpcRequest req, Object handler)
+        throws RpcException, IllegalAccessException, InvocationTargetException {
         if (contract == null) {
             throw new IllegalStateException("contract cannot be null");
+        }
+        if (req == null) {
+            throw new IllegalArgumentException("req cannot be null");
+        }
+        if (handler == null) {
+            throw new IllegalArgumentException("handler cannot be null");
         }
 
         Method method      = getMethod(handler);
@@ -63,6 +105,15 @@ public class Function extends BaseEntity {
         return marshalResult(method.invoke(handler, reqParams));
     }
 
+    /**
+     * Marshals the req.params to their RPC format equivalents.  For example, a Java Struct
+     * class will be converted to a Map.
+     *
+     * @param req RpcRequest to marshal params for
+     * @return RPC representation of params in req
+     * @throws RpcException If param length differs from expected param length for this function,
+     *         or if any parameters fail IDL type validation
+     */
     public Object[] marshalParams(RpcRequest req) throws RpcException {
         Object[] converted = new Object[params.size()];
         Object[] reqParams = req.getParams();
@@ -79,8 +130,13 @@ public class Function extends BaseEntity {
         return converted;
     }
 
+    /**
+     * Unmarshals respObj into its Java representation
+     *
+     * @throws RpcException if respObj does not match IDL type validation
+     */
     public Object unmarshalResult(Object respObj) throws RpcException {
-        return returns.getTypeConverter().unmarshal(contract.getPackage(), respObj);
+        return returns.getTypeConverter().unmarshal(respObj);
     }
 
     private Object[] unmarshalParams(RpcRequest req, Method method) throws RpcException {
@@ -96,6 +152,12 @@ public class Function extends BaseEntity {
         return unmarshalParams(req);
     }
 
+    /**
+     * Unmarshals req.params into their Java representations
+     *
+     * @throws RpcException if req.params length does not match this Function's expected
+     *         param list length, or if any parameter fails IDL type validation
+     */
     public Object[] unmarshalParams(RpcRequest req) throws RpcException {
         Object reqParams[] = req.getParams();
         if (reqParams.length != params.size()) {
@@ -104,11 +166,9 @@ public class Function extends BaseEntity {
             throw invParams(msg);
         }
 
-        String pkg = contract.getPackage();
-
         Object convParams[] = new Object[reqParams.length];
         for (int i = 0; i < convParams.length; i++) {
-            convParams[i] = params.get(i).getTypeConverter().unmarshal(pkg, reqParams[i]);
+            convParams[i] = params.get(i).getTypeConverter().unmarshal(reqParams[i]);
         }
 
         return convParams;

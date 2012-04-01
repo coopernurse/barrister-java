@@ -1,5 +1,8 @@
 package com.bitmechanic.barrister;
 
+/**
+ * TypeConverter for IDL 'bool' types
+ */
 public class BoolTypeConverter extends BaseTypeConverter {
 
     public BoolTypeConverter(boolean isOptional) {
@@ -10,7 +13,7 @@ public class BoolTypeConverter extends BaseTypeConverter {
         return Boolean.class;
     }
 
-    public Object unmarshal(String pkg, Object o) throws RpcException {
+    public Object unmarshal(Object o) throws RpcException {
         if (o == null)
             return returnNullIfOptional();
         else if (o.getClass() == Boolean.class || o.getClass() == boolean.class)
@@ -21,7 +24,7 @@ public class BoolTypeConverter extends BaseTypeConverter {
     }
 
     public Object marshal(Object o) throws RpcException {
-        return unmarshal(null, o);
+        return unmarshal(o);
     }
 
 }

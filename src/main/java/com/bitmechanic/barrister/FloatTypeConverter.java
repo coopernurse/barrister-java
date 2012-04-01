@@ -1,5 +1,9 @@
 package com.bitmechanic.barrister;
 
+/**
+ * TypeConverter for IDL 'float' types.  Allows Java short, int, long, float, and doubles, but
+ * always returns Java Doubles.
+ */
 public class FloatTypeConverter extends BaseTypeConverter {
 
     public FloatTypeConverter(boolean isOptional) {
@@ -10,7 +14,12 @@ public class FloatTypeConverter extends BaseTypeConverter {
         return Double.class;
     }
 
-    public Object unmarshal(String pkg, Object o) throws RpcException {
+    /**
+     * Returns o as a Java Double
+     *
+     * @throws RpcException If o is not a short, int, long, float, or double
+     */
+    public Object unmarshal(Object o) throws RpcException {
         if (o == null)
             return returnNullIfOptional();
         else {
@@ -32,7 +41,7 @@ public class FloatTypeConverter extends BaseTypeConverter {
     }
 
     public Object marshal(Object o) throws RpcException {
-        return unmarshal(null, o);
+        return unmarshal(o);
     }
 
 }

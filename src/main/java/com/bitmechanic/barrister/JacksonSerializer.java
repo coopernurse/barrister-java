@@ -21,6 +21,13 @@ import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.impl.JsonWriteContext;
 import org.codehaus.jackson.JsonGenerationException;
 
+/**
+ * Serializer implementation that uses Jackson to encode/decode JSON.  The only interesting bit
+ * is that JsonGenerator.Feature.ESCAPE_NON_ASCII is enabled to ensure that serialized values
+ * are ASCII clean.
+ *
+ * @see <a href="http://jackson.codehaus.org/"> Jackson Home Page
+ */
 public class JacksonSerializer implements Serializer
 {
 
@@ -29,14 +36,6 @@ public class JacksonSerializer implements Serializer
     public JacksonSerializer() {
         jsonFactory = new JsonFactory();
     }
-
-    /*
-    public byte[] serialize(Object o) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode node = mapper.valueToTree(o);
-        return node.toString().getBytes("utf-8");
-    }
-    */
         
     public Map readMap(InputStream is) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
@@ -68,46 +67,5 @@ public class JacksonSerializer implements Serializer
         mapper.writeValue(gen, list);
         gen.close();
     }
-
-    /*
-    public RpcRequest readRequest(byte[] input) throws IOException {
-        return new JacksonRpcRequest(input);
-    }
-
-    public byte[] writeResponse(RpcResponse resp) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-
-        ObjectNode respNode = mapper.createObjectNode();
-        respNode.put("jsonrpc", "2.0");
-
-        String id = resp.getId();
-        if (id != null) {
-            respNode.put("id", id);
-        }
-
-        RpcException err = resp.getError();
-        if (err != null) {
-            ObjectNode errNode = mapper.createObjectNode();
-            errNode.put("code", err.getCode());
-            errNode.put("message", err.getMessage());
-            if (err.getData() != null) {
-                errNode.put("data", mapper.valueToTree(err.getData()));
-            }
-            respNode.put("error", errNode);
-        }
-        else {
-            respNode.put("result", mapper.valueToTree(resp.getResult()));
-        }
-
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        JsonGenerator gen = jsonFactory.createJsonGenerator(bos);
-        gen.enable(JsonGenerator.Feature.ESCAPE_NON_ASCII);
-        mapper.writeTree(gen, respNode);
-        gen.close();
-        byte[] arr = bos.toByteArray();
-        bos.close();
-        return arr;
-    }
-    */
 
 }

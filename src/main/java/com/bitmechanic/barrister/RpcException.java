@@ -3,8 +3,23 @@ package com.bitmechanic.barrister;
 import java.util.Map;
 import java.util.HashMap;
 
+/**
+ * Represents a JSON-RPC error.  Errors have three parts:
+ *
+ * <ul>
+ *   <li>code</li> Integer that identifies the error type
+ *   <li>message</li> String description of the error
+ *   <li>data</li> Optional additional info about the error. This will be serialized
+ *   verbatim, so we suggest sticking to Java primitive types, or List/Maps of primitives, 
+ *   otherwise the serialization behavior may be undefined.
+ * </ul>
+ */
 public class RpcException extends Exception {
 
+    /**
+     * Enum of JSON-RPC standard error types.  Used to generate internal
+     * errors.
+     */
     public enum Error {
         INVALID_REQ(-32600), PARSE(-32700), METHOD_NOT_FOUND(-32601),
             INVALID_PARAMS(-32602), INTERNAL(-32603), 
@@ -33,28 +48,54 @@ public class RpcException extends Exception {
     private String message;
     private Object data;
 
+    /**
+     * Creates a new RpcException
+     *
+     * @param code Error code
+     * @param message Error message
+     */
     public RpcException(int code, String message) {
         this(code, message, null);
     }
 
+    /**
+     * Creates a new RpcException
+     *
+     * @param code Error code
+     * @param message Error message
+     * @param data Additional error information. Please use primitives or Maps/Lists of 
+     *        primitives
+     */
     public RpcException(int code, String message, Object data) {
         this.code = code;
         this.message = message;
         this.data = data;
     }
 
+    /**
+     * Returns the error code
+     */
     public int getCode() {
         return code;
     }
 
+    /**
+     * Returns the error message
+     */
     public String getMessage() {
         return message;
     }
 
+    /**
+     * Returns the optional data 
+     */
     public Object getData() {
         return data;
     }
 
+    /**
+     * Used to marshal this exception to a Map suiteable for serialization to JSON
+     */
     @SuppressWarnings("unchecked")
     public Map toMap() {
         HashMap map = new HashMap();

@@ -4,15 +4,26 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.io.FileWriter;
 
+/**
+ * Code generator.  Provides a command line interface for generating Java classes
+ * based on an IDL JSON file.
+ *
+ * Usage:
+ *
+ * java com.bitmechanic.barrister.Idl2Java -j [idl file] -p [Java package name] -o [out dir]
+ */
 public class Idl2Java {
 
+    /**
+     * Runs the code generator on the command line.
+     */
     public static void main(String argv[]) throws Exception {
         String idlFile = null;
         String pkgName = null;
         String outDir = null;
 
         for (int i = 0; i < argv.length; i++) {
-            if (argv[i].equals("-i")) {
+            if (argv[i].equals("-j")) {
                 idlFile = argv[++i];
             }
             else if (argv[i].equals("-p")) {
@@ -24,7 +35,7 @@ public class Idl2Java {
         }
 
         if (isBlank(idlFile) || isBlank(pkgName) || isBlank(outDir)) {
-            out("Usage: idl2java.sh -i [idl file] -p [Java package name] -o [out dir]");
+            out("Usage: java com.bitmechanic.barrister.Idl2Java -j [idl file] -p [Java package name] -o [out dir]");
             System.exit(1);
         }
 
