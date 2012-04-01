@@ -7,5 +7,4 @@ mvn clean compile
 mvn install
 
 cd conform
-./conform_idl2java.sh
 mvn clean package
