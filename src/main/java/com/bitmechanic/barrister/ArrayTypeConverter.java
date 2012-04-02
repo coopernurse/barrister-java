@@ -38,7 +38,6 @@ public class ArrayTypeConverter extends BaseTypeConverter {
                 arr[i] = child.unmarshal(input.get(i));
             }
 
-            System.out.println("Returning arr: " + arr.getClass() + " - " + Arrays.deepToString(arr));
             return arr;
         }
         else if (o.getClass().isArray()) {

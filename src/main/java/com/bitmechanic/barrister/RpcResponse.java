@@ -83,6 +83,7 @@ public class RpcResponse {
     @SuppressWarnings("unchecked") 
     public Map marshal() {
         HashMap map = new HashMap();
+        map.put("jsonrpc", "2.0");
         if (id != null)
             map.put("id", id);
         if (error != null)

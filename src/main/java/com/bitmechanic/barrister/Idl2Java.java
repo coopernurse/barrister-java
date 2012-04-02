@@ -145,7 +145,12 @@ public class Idl2Java {
         }
         for (Field f : s.getFields().values()) {
             line(2, "if (" + f.getName() + " == null && _o." + f.getName() + " != null) { return false; }");
-            line(2, "else if (" + f.getName() + " != null && !" + f.getName() + ".equals(_o." + f.getName() + ")) { return false; }");
+            if (f.isArray()) {
+                line(2, "else if (" + f.getName() + " != null && !java.util.Arrays.equals(" + f.getName() + ", _o." + f.getName() + ")) { return false; }");
+            }
+            else {
+                line(2, "else if (" + f.getName() + " != null && !" + f.getName() + ".equals(_o." + f.getName() + ")) { return false; }");
+            }
         }
         line(2, "return true;");
         line(1, "}");

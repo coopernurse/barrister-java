@@ -106,7 +106,6 @@ public class RpcRequest {
             map.put("params", f.marshalParams(this));
         }
 
-        System.out.println("req.marshal: " + map);
         return map;
     }
 
