@@ -4,11 +4,38 @@
 
   <groupId>com.bitmechanic</groupId>
   <artifactId>barrister</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>0.1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>barrister</name>
-  <url>http://maven.apache.org</url>
+  <url>http://barrister.bitmechanic.com/</url>
+  <description>Java bindings for Barrister RPC</description>
+
+  <parent>
+      <groupId>org.sonatype.oss</groupId>
+      <artifactId>oss-parent</artifactId>
+      <version>7</version>
+  </parent>
+
+  <licenses>
+    <license>
+      <name>MIT License</name>
+      <url>https://raw.github.com/coopernurse/barrister-java/master/LICENSE</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <scm>
+      <connection>scm:git:git@github.com:coopernurse/barrister-java.git</connection>
+      <developerConnection>scm:git:git@github.com:coopernurse/barrister-java.git</developerConnection>
+      <url>git@github.com:coopernurse/barrister-java.git</url>
+  </scm>
+  <developers>
+      <developer>
+          <id>coopernurse</id>
+          <name>James Cooper</name>
+          <email>james@bitmechanic.com</email>
+      </developer>
+  </developers>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

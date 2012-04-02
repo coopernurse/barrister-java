@@ -8,7 +8,7 @@ To use this in your project, add this dependency to your `pom.xml`
     <dependency>
         <groupId>com.bitmechanic</groupId>
         <artifactId>barrister</artifactId>
-        <version>1.0-SNAPSHOT</version>
+        <version>0.1.0-SNAPSHOT</version>
     </dependency>
 ```
 
@@ -93,7 +93,7 @@ Go back to the `barrister-demo-contact` dir and edit the `pom.xml` file.  Add th
     <dependency>
       <groupId>com.bitmechanic</groupId>
       <artifactId>barrister</artifactId>
-      <version>1.0-SNAPSHOT</version>
+      <version>0.1.0-SNAPSHOT</version>
     </dependency>
     <dependency>
         <groupId>javax.servlet</groupId>
