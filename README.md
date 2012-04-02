@@ -1,6 +1,29 @@
 # Barrister Java Bindings
 
-Placeholder README. More soon.
+## Installation
+
+To use this in your project, add this dependency to your `pom.xml`
+
+```xml
+    <dependency>
+        <groupId>com.bitmechanic</groupId>
+        <artifactId>barrister</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </dependency>
+```
+
+This project depends on Jackson 1.9 for JSON serialization support.
+
+## Usage
+
+To use Barrister on your Java project, follow these steps:
+
+* Write a [Barrister IDL](http://barrister.bitmechanic.com/docs.html) file
+* Run the `barrister` tool to convert the IDL file to `.json` and (optionally) `.html` representations
+  * See the [download page](http://barrister.bitmechanic.com/download.html) for details on installing the barrister tool.  It is separate from the Java bindings
+* Run the `idl2java` tool bundled with the above Maven dependency to generate Java classes from the IDL `json` file
+  * See the tutorial below for details on running `idl2java`
+* Write server and/or client implementations based on the generated classes
 
 ## Tutorial
 
@@ -145,25 +168,81 @@ Now we're ready to get down to business.  Create this file:
 package com.bitmechanic.contact;
 
 import com.bitmechanic.barrister.RpcException;
-import com.bitmechanic.contact.generated.ContactService;
-import com.bitmechanic.contact.generated.Contact;
+import com.bitmechanic.contact.generated.*;
+import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.UUID;
 
 public class ContactServiceImpl implements ContactService {
 
+    enum CustomErr {
+        INVALID(100, "Invalid %s"),
+        DENIED(101, "Permission denied: %s"),
+        LIMIT(102, "Limit exceeded: %s");
+
+        private int code;
+        private String msgFormat;
+
+        CustomErr(int code, String msgFormat) {
+            this.code = code;
+            this.msgFormat = msgFormat;
+        }
+
+        RpcException toException(String... msgArgs) {
+            return new RpcException(code, String.format(msgFormat, msgArgs));
+        }
+    }
+
+    private HashMap<String,Contact> byId = new HashMap<String,Contact>();
+
     public String put(Contact contact) throws RpcException {
-        return null;
+        String contactId = getOrCreateId(contact);
+        if (!byId.containsKey(contactId)) {
+            String userId = contact.getUserId();
+            if (getAll(userId).length >= 10) {
+                throw CustomErr.LIMIT.toException("User " + userId + " has 10 or more contacts");
+            }
+        }
+        byId.put(contactId, contact);
+        return contactId;
     }
 
     public Contact get(String contactId, String userId) throws RpcException {
-        return null;
+        Contact c = byId.get(contactId);
+        if (c == null || c.getUserId().equals(userId)) {
+            return c;
+        }
+        else {
+            throw CustomErr.DENIED.toException("User " + userId + " doesn't own contact: " + contactId);
+        }
     }
 
     public Contact[] getAll(String userId) throws RpcException {
-        return null;
+        ArrayList<Contact> list = new ArrayList<Contact>();
+        for (Contact c : byId.values()) {
+            if (c.getUserId().equals(userId)) {
+                list.add(c);
+            }
+        }
+        return list.toArray(new Contact[0]);
     }
 
     public Boolean delete(String contactId, String userId) throws RpcException {
-        return null;
+        Contact c = get(contactId, userId);
+        if (c == null) {
+            return false;
+        }
+        else {
+            byId.remove(contactId);
+            return true;
+        }
+    }
+
+    private String getOrCreateId(Contact contact) {
+        if (contact.getContactId() == null) {
+            contact.setContactId(UUID.randomUUID().toString());
+        }
+        return contact.getContactId();
     }
 
 }
@@ -324,7 +403,7 @@ What happens if you omit a required property on the Contact?
          -d '{"jsonrpc":"2.0", "method":"ContactService.put", "params":{"userId":"user-12","firstName":"John","lastName":"Doe","email":"john@example.com", "phones":[]}}' \
          http://localhost:8080/barrister-demo-contact/contact
          
-Barrister automatically detects this and rejects the request. 
+Barrister automatically detects this and rejects the request.  Very nice.
 
     {
         "jsonrpc": "2.0",
