@@ -1,6 +1,7 @@
 package com.bitmechanic.barrister;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.InvocationTargetException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -134,8 +135,15 @@ public class Server {
             Object result = func.invoke(req, handler);
             resp = new RpcResponse(req, result);
         }
-        catch (RpcException e) {
-            resp = new RpcResponse(req, e);
+        catch (InvocationTargetException e) {
+            Throwable target = e.getTargetException();
+            if (target instanceof RpcException) {
+                resp = new RpcResponse(req, (RpcException)target);
+            }
+            else {
+                logger.throwing("Server", "call", target);
+                resp = new RpcResponse(req, RpcException.Error.UNKNOWN.exc(target.getClass().getName() + ": " + target.getMessage()));
+            }
         }
         catch (Throwable t) {
             logger.throwing("Server", "call", t);
