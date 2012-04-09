@@ -245,7 +245,10 @@ public class Idl2Java {
             }
             line(2, "com.bitmechanic.barrister.RpcRequest _req = new com.bitmechanic.barrister.RpcRequest(java.util.UUID.randomUUID().toString(), \"" + iface.getName() + "." + f.getName() + "\", _params);");
             line(2, "com.bitmechanic.barrister.RpcResponse _resp = this._trans.request(_req);");
-            line(2, "if (_resp.getError() == null) {");
+            line(2, "if (_resp == null) {");
+            line(3, "return null;");
+            line(2, "}");
+            line(2, "else if (_resp.getError() == null) {");
             line(3, "return (" + f.getReturns().getJavaType() + ")_resp.getResult();");
             line(2, "}");
             line(2, "else {");
