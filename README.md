@@ -25,6 +25,17 @@ To use Barrister on your Java project, follow these steps:
   * See the tutorial below for details on running `idl2java`
 * Write server and/or client implementations based on the generated classes
 
+## Exposing service classes
+
+Barrister doesn't tell you how to instantiate your classes at runtime.  Consequently you are free
+to expose your Barrister service classes via Spring, Guice, or as plain Servlets.  The example
+services on the Barrister web site use the provided `BarristerServlet`, which allows you to expose
+a single IDL and its related interfaces with no additional code provided that the interface
+implementation classes contain no-arg constructors.  See the Javadoc for a `web.xml` example of 
+how to use this servlet.  The `BarristerServlet.java` source is also a good example of how to
+integrate with the Service class. You could adapt this code to wire up your services using the 
+framework of your choice.
+
 ## Documentation
 
 * Read the [Contact Service Tutorial](https://github.com/coopernurse/barrister-demo-contact/tree/master/java/barrister-demo-contact)
