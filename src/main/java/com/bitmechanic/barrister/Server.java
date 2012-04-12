@@ -141,13 +141,22 @@ public class Server {
                 resp = new RpcResponse(req, (RpcException)target);
             }
             else {
+                logger.severe("Unhandled Exception: " + target.getClass().getName());
                 logger.throwing("Server", "call", target);
                 resp = new RpcResponse(req, RpcException.Error.UNKNOWN.exc(target.getClass().getName() + ": " + target.getMessage()));
             }
         }
         catch (Throwable t) {
-            logger.throwing("Server", "call", t);
-            resp = new RpcResponse(req, RpcException.Error.UNKNOWN.exc(t.getMessage()));
+            RpcException rpcExc = null;
+            if (t instanceof RpcException) {
+                rpcExc = (RpcException)t;
+            }
+            else {
+                logger.severe("Unhandled Exception: " + t.getClass().getName());
+                logger.throwing("Server", "call", t);
+                rpcExc = RpcException.Error.UNKNOWN.exc(t.getMessage());
+            }
+            resp = new RpcResponse(req, rpcExc);
         }
 
         return resp;
