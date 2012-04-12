@@ -3,6 +3,7 @@ package com.bitmechanic.barrister;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.FileWriter;
+import java.util.Map;
 
 /**
  * Code generator.  Provides a command line interface for generating Java classes
@@ -88,10 +89,32 @@ public class Idl2Java {
         for (Interface i : contract.getInterfaces().values()) {
             generate(i);
         }
+
+        generate(contract.getMeta());
+    }
+
+    private void generate(Map<String,Object> meta) throws Exception {
+        start();
+        line(0, "public class BarristerMeta {");
+        line(0, "");
+        for (String key : meta.keySet()) {
+            Object val = meta.get(key);
+            String type = val.getClass().getSimpleName();
+            if (val.getClass() == Long.class) {
+              val = val + "L";
+            }
+            else if (val.getClass() == String.class) {
+                val = "\"" + val + "\"";
+            }
+            line(1, "public static final " + type + " " + key.toUpperCase() + " = " + val + ";");
+        }
+        line(0, "");
+        line(0, "}");
+        toFile("BarristerMeta");
     }
 
     private void generate(Struct s) throws Exception {
-        start(s);
+        start();
         boolean hasParent = false;
         String extend = " implements com.bitmechanic.barrister.BStruct";
         if (!isBlank(s.getExtends())) {
@@ -171,7 +194,7 @@ public class Idl2Java {
     }
 
     private void generate(Enum en) throws Exception {
-        start(en);
+        start();
         line(0, "public enum " + en.getName() + " {");
 
         StringBuilder vals = new StringBuilder();
@@ -189,7 +212,7 @@ public class Idl2Java {
     }
 
     private void generate(Interface iface) throws Exception {
-        start(iface);
+        start();
         line(0, "");
         line(0, "public interface " + iface.getName() + " {");
         line(0, "");
@@ -210,7 +233,7 @@ public class Idl2Java {
         toFile(iface);
 
         String className = iface.getName() + "Client";
-        start(iface);
+        start();
         line(0, "public class " + className + " implements " + iface.getName() + " {");
         line(0, "");
         line(1, "private com.bitmechanic.barrister.Transport _trans;");
@@ -261,7 +284,7 @@ public class Idl2Java {
         toFile(className);
     }
 
-    private void start(BaseEntity b) {
+    private void start() {
         sb = new StringBuilder();
         line(0, "package " + pkgName + ";");
         line(0, "");

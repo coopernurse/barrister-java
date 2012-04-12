@@ -69,6 +69,7 @@ public class Contract extends BaseEntity {
     private Map<String, Interface> interfaces;
     private Map<String, Struct> structs;
     private Map<String, Enum> enums;
+    private Map<String, Object> meta;
 
     private List<Map<String,Object>> idl;
 
@@ -78,6 +79,7 @@ public class Contract extends BaseEntity {
         interfaces = new HashMap<String, Interface>();
         structs    = new HashMap<String, Struct>();
         enums      = new HashMap<String, Enum>();
+        meta       = new HashMap<String, Object>();
     }
 
     /**
@@ -86,6 +88,7 @@ public class Contract extends BaseEntity {
     public Contract(List<Map<String,Object>> idl) {
         this();
         this.idl = idl;
+        this.meta = new HashMap<String, Object>();
 
         for (Map<String,Object> e : idl) {
             String type = String.valueOf(e.get("type"));
@@ -103,6 +106,13 @@ public class Contract extends BaseEntity {
                 Enum en = new Enum(e);
                 en.setContract(this);
                 enums.put(en.getName(), en);
+            }
+            else if (type.equals("meta")) {
+                for (Object key : e.keySet()) {
+                    if (!key.toString().equals("type")) {
+                        meta.put(key.toString(), e.get(key));
+                    }
+                }
             }
         }
     }
@@ -128,6 +138,13 @@ public class Contract extends BaseEntity {
      */
     public List<Map<String,Object>> getIdl() {
         return idl;
+    }
+
+    /**
+     * Returns values from the IDL "meta" element
+     */
+    public Map<String, Object> getMeta() {
+        return meta;
     }
 
     /**
