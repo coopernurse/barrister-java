@@ -60,7 +60,7 @@ Note to self on how to tag release
     # Edit `README.md`, bump example maven dep version
     
     # publish to sonatype
-    mvn clean deploy
+    mvn -DperformRelease=true clean deploy
     
     # stop python flask server
     
