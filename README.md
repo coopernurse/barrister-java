@@ -8,7 +8,7 @@ To use this in your project, add this dependency to your `pom.xml`
     <dependency>
         <groupId>com.bitmechanic</groupId>
         <artifactId>barrister</artifactId>
-        <version>0.1.0-SNAPSHOT</version>
+        <version>0.1.1</version>
     </dependency>
 ```
 
@@ -48,3 +48,39 @@ framework of your choice.
 ## License
 
 Distributed under the MIT license.  See LICENSE file for details.
+
+## Release / Tag notes
+
+Note to self on how to tag release
+
+    # start python conform server so that integration tests can run
+    cd ~/bitmechanic/barrister/conform; python flask_server.py conform.json &
+
+    # Edit `pom.xml`, bump version
+    # Edit `README.md`, bump example maven dep version
+    
+    # publish to sonatype
+    mvn clean deploy
+    
+    # stop python flask server
+    
+    # push tag to github
+    git add -u
+    git commit -m "bump v0.1.0"
+    git tag -a v0.1.0 -m "version 0.1.0"
+    git push --tags
+    git push
+    
+    # publish artifact from staging
+    # see guide: https://docs.sonatype.org/display/Repository/Sonatype+OSS+Maven+Repository+Usage+Guide
+    login to: https://oss.sonatype.org/index.html#welcome
+    click 'Staging Repositories' in left sidebar
+    click a repository in middle pane (may popup window with 404, ignore)
+    bottom panel should show a staged release
+    click 'Close' button
+    enter a comment 'barrister 0.1.1'
+    click 'refresh' on the main pane - status should now be 'closed'
+    click on the repository again
+    click 'release' button
+    enter a comment 'Barrister RPC 0.1.1'
+    
