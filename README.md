@@ -2,6 +2,8 @@
 
 ## Installation
 
+### Maven or Ivy
+
 To use this in your project, add this dependency to your `pom.xml`
 
 ```xml
@@ -12,7 +14,43 @@ To use this in your project, add this dependency to your `pom.xml`
     </dependency>
 ```
 
-This project depends on Jackson 1.9 for JSON serialization support.
+### Non-Maven
+
+If you're managing dependencies manually, you need to download 3 JARs:
+
+* `barrister.jar`
+* `jackson-mapper-asl.jar`
+* `jackson-core-asl.jar`
+
+One way to do this might be:
+
+```sh
+    curl -o barrister-0.1.1.jar "http://search.maven.org/remotecontent?filepath=com/bitmechanic/barrister/0.1.1/barrister-0.1.1.jar"
+    curl -o jackson-mapper-asl-1.9.7.jar "http://search.maven.org/remotecontent?filepath=org/codehaus/jackson/jackson-mapper-asl/1.9.7/jackson-mapper-asl-1.9.7.jar"
+    curl -o jackson-core-asl-1.9.7.jar "http://search.maven.org/remotecontent?filepath=org/codehaus/jackson/jackson-core-asl/1.9.7/jackson-core-asl-1.9.7.jar"
+```
+
+Then set your CLASSPATH:
+
+```sh
+export CLASSPATH=barrister-0.1.1.jar:jackson-mapper-asl-1.9.7.jar:jackson-core-asl-1.9.7.jar
+```
+
+### idl2java
+
+`idl2java` generates Java classes from a Barrister IDL JSON file.   To install:
+
+```sh
+    curl https://raw.github.com/coopernurse/barrister-java/master/idl2java.sh > /usr/local/bin/idl2java
+    chmod 755 /usr/local/bin/idl2java
+    export PATH=$PATH:/usr/local/bin
+```
+
+Then run against your JSON file:
+
+```sh
+    idl2java -j my.json -p com.example.mypackage -o src
+```
 
 ## Usage
 
