@@ -123,9 +123,30 @@ public class Idl2Java {
         }
         line(0, "public class " + s.getName() + extend + " {");
 
+        line(0, "");
         for (Field f : s.getFields().values()) {
             line(1, "private " + f.getJavaType() + " " + f.getName() + ";");
         }
+
+        Map<String,Field> allFields = s.getFieldsPlusParents();
+        line(0, "");
+        line(1, "public static class Builder {");
+        for (String name : allFields.keySet()) {
+            Field f = allFields.get(name);
+            line(2, "private " + f.getJavaType() + " _" + f.getName() + ";");
+            line(2, "public Builder " + f.getName() + "(" + f.getJavaType() + 
+                 " " + f.getName() + ") { " +
+                 "this._" + f.getName() + " = " + f.getName() + "; return this; }");
+        }
+        line(2, "public " + s.getName() + " build() {");
+        line(3, s.getName() + " _tmp = new " + s.getName() + "();");
+        for (String name : allFields.keySet()) {
+            Field f = allFields.get(name);
+            line(3, "_tmp.set" + f.getUpperName() + "(_" + f.getName() + ");");
+        }
+        line(3, "return _tmp;");
+        line(2, "}");
+        line(1, "}");
 
         for (Field f : s.getFields().values()) {
             line(0, "");
