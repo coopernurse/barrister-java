@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Collections;
 import java.net.URL;
 import java.net.URLConnection;
 import java.io.IOException;
@@ -57,12 +58,11 @@ public class HttpTransport implements Transport {
 
     /**
      * Returns the HTTP headers associated with this Transport. 
-     * The returned map is a copy of the headers on the HttpTransport
-     * instance, so modifying the map will not affect the HttpTransport.
-     * The intent is that headers are immutable.
+     * This returns an immutable copy of the headers map, so its
+     * contents may not be modified.
      */
     public Map<String,String> getHeaders() {
-        return new HashMap(headers);
+        return Collections.unmodifiableMap(headers);
     }
 
     @SuppressWarnings("unchecked")
