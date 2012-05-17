@@ -16,7 +16,7 @@ import java.io.ByteArrayOutputStream;
  */
 public class HttpTransport implements Transport {
 
-    private URL url;
+    private String endpoint;
     private Serializer serializer;
     private Contract contract;
     private Map<String,String> headers;
@@ -48,7 +48,7 @@ public class HttpTransport implements Transport {
             headers = new HashMap<String,String>();
         }
 
-        this.url = new URL(endpoint);
+        this.endpoint = endpoint;
         this.serializer = serializer;
         this.headers = headers;
         this.headers.put("Content-Type", "application/json");
@@ -56,10 +56,13 @@ public class HttpTransport implements Transport {
     }
 
     /**
-     * Returns the HTTP headers associated with this Transport
+     * Returns the HTTP headers associated with this Transport. 
+     * The returned map is a copy of the headers on the HttpTransport
+     * instance, so modifying the map will not affect the HttpTransport.
+     * The intent is that headers are immutable.
      */
     public Map<String,String> getHeaders() {
-        return headers;
+        return new HashMap(headers);
     }
 
     @SuppressWarnings("unchecked")
@@ -76,11 +79,11 @@ public class HttpTransport implements Transport {
             is = requestRaw(data);
             Map map = serializer.readMap(is);
             if (map.get("error") != null) {
-                throw new IOException("Unable to load IDL from " + url + " - " +
+                throw new IOException("Unable to load IDL from " + endpoint + " - " +
                                       map.get("error"));
             } 
             else if (map.get("result") == null) {
-                throw new IOException("Unable to load IDL from " + url + " - " +
+                throw new IOException("Unable to load IDL from " + endpoint + " - " +
                                       "result is null");
             }
             else {
@@ -88,7 +91,7 @@ public class HttpTransport implements Transport {
             }
         }
         catch (RpcException e) {
-            throw new IOException("Unable to load IDL from " + url + " - " +
+            throw new IOException("Unable to load IDL from " + endpoint + " - " +
                                   e.getMessage());
         }
         finally {
@@ -123,7 +126,7 @@ public class HttpTransport implements Transport {
         }
         catch (IOException e) {
             String msg = "IOException requesting " + req.getMethod() + 
-                " from: " + url + " - " + e.getMessage();
+                " from: " + endpoint + " - " + e.getMessage();
             RpcException exc = RpcException.Error.INTERNAL.exc(msg);
             return new RpcResponse(req, exc);
         }
@@ -188,7 +191,7 @@ public class HttpTransport implements Transport {
         }
         catch (IOException e) {
             String msg = "IOException requesting batch " +
-                " from: " + url + " - " + e.getMessage();
+                " from: " + endpoint + " - " + e.getMessage();
             RpcException exc = RpcException.Error.INTERNAL.exc(msg);
             respList.add(new RpcResponse(null, exc));
         }
@@ -209,6 +212,7 @@ public class HttpTransport implements Transport {
     }
 
     private InputStream requestRaw(byte[] data) throws IOException {
+        URL url = new URL(this.endpoint);
         URLConnection conn = url.openConnection();
         conn.setDoOutput(true);
 

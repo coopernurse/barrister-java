@@ -50,7 +50,7 @@ public class Server {
      * @throws IllegalArgumentException if iface is not an interface on this Server's Contract
      *         or if handler cannot be cast to iface
      */
-    public void addHandler(Class iface, Object handler) {
+    public synchronized void addHandler(Class iface, Object handler) {
         try {
             iface.cast(handler);
         }
