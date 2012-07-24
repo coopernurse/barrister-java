@@ -10,7 +10,7 @@ To use this in your project, add this dependency to your `pom.xml`
     <dependency>
         <groupId>com.bitmechanic</groupId>
         <artifactId>barrister</artifactId>
-        <version>0.1.2</version>
+        <version>0.1.4</version>
     </dependency>
 ```
 
@@ -25,7 +25,7 @@ If you're managing dependencies manually, you need to download 3 JARs:
 One way to do this might be:
 
 ```sh
-    curl -o barrister-0.1.2.jar "http://search.maven.org/remotecontent?filepath=com/bitmechanic/barrister/0.1.2/barrister-0.1.2.jar"
+    curl -o barrister-0.1.4.jar "http://search.maven.org/remotecontent?filepath=com/bitmechanic/barrister/    /barrister-0.1.4.jar"
     curl -o jackson-mapper-asl-1.9.7.jar "http://search.maven.org/remotecontent?filepath=org/codehaus/jackson/jackson-mapper-asl/1.9.7/jackson-mapper-asl-1.9.7.jar"
     curl -o jackson-core-asl-1.9.7.jar "http://search.maven.org/remotecontent?filepath=org/codehaus/jackson/jackson-core-asl/1.9.7/jackson-core-asl-1.9.7.jar"
 ```
@@ -33,7 +33,7 @@ One way to do this might be:
 Then set your CLASSPATH:
 
 ```sh
-export CLASSPATH=barrister-0.1.2.jar:jackson-mapper-asl-1.9.7.jar:jackson-core-asl-1.9.7.jar
+export CLASSPATH=barrister-0.1.4.jar:jackson-mapper-asl-1.9.7.jar:jackson-core-asl-1.9.7.jar
 ```
 
 ### idl2java
@@ -101,12 +101,14 @@ Note to self on how to tag release
     # publish to sonatype
     mvn -DperformRelease=true clean deploy
     
+    (use m pw w/o bang)
+    
     # stop python flask server
     
     # push tag to github
     git add -u
-    git commit -m "bump v0.1.2"
-    git tag -a v0.1.0 -m "version 0.1.2"
+    git commit -m "bump v0.1.4"
+    git tag -a v0.1.4 -m "version 0.1.4"
     git push --tags
     git push
     
@@ -117,9 +119,9 @@ Note to self on how to tag release
     click a repository in middle pane (may popup window with 404, ignore)
     bottom panel should show a staged release
     click 'Close' button
-    enter a comment 'barrister 0.1.2'
+    enter a comment 'barrister 0.1.4'
     click 'refresh' on the main pane - status should now be 'closed'
     click on the repository again
     click 'release' button
-    enter a comment 'Barrister RPC 0.1.2'
+    enter a comment 'Barrister RPC 0.1.4'
     

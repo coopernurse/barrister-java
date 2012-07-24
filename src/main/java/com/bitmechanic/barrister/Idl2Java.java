@@ -281,9 +281,6 @@ public class Idl2Java {
             if (f.getParams().size() == 0) {
                 line(2, "Object _params = null;");
             }
-            else if (f.getParams().size() == 1) {
-                line(2, "Object _params = " + f.getParams().get(0).getName() + ";");
-            }
             else {
                 line(2, "Object _params = new Object[] { " + paramNames + " };");
             }
