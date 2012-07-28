@@ -141,9 +141,12 @@ public class Server {
                 resp = new RpcResponse(req, (RpcException)target);
             }
             else {
-                logger.severe("Unhandled Exception: " + target.getClass().getName());
+                String msg = "barrister-java: InvocationTargetException - Uncaught error executing: " + req.getFunc() +
+                    " class: " + target.getClass().getName() + 
+                    " message: " + target.getMessage();
+                logger.severe(msg);
                 logger.throwing("Server", "call", target);
-                resp = new RpcResponse(req, RpcException.Error.UNKNOWN.exc(target.getClass().getName() + ": " + target.getMessage()));
+                resp = new RpcResponse(req, RpcException.Error.UNKNOWN.exc(msg));
             }
         }
         catch (Throwable t) {
@@ -152,9 +155,12 @@ public class Server {
                 rpcExc = (RpcException)t;
             }
             else {
-                logger.severe("Unhandled Exception: " + t.getClass().getName());
+                String msg = "barrister-java: Uncaught error executing: " + req.getFunc() +
+                    " class: " + t.getClass().getName() + 
+                    " message: " + t.getMessage();
+                logger.severe(msg);
                 logger.throwing("Server", "call", t);
-                rpcExc = RpcException.Error.UNKNOWN.exc(t.getMessage());
+                rpcExc = RpcException.Error.UNKNOWN.exc(msg);
             }
             resp = new RpcResponse(req, rpcExc);
         }

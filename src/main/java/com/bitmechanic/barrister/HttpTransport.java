@@ -45,24 +45,58 @@ public class HttpTransport implements Transport {
     public HttpTransport(String endpoint, Map<String,String> headers, Serializer serializer) 
         throws IOException {
 
+        this(endpoint, headers, serializer, null);
+    }
+
+    /**
+     * Creates a new HttpTransport.  When this constructor is called, the Contract for the
+     * given endpoint URL will be immediately requested.
+     *
+     * @param endpoint URL of the Barrister server to consume
+     * @param headers HTTP headers to add to requests against this transport. For example,
+     *        "Authorization"
+     * @param serializer Serializer to use with this transport
+     * @throws IOException If contract is null and there is a problem loading the IDL from the endpoint
+     */
+    public HttpTransport(String endpoint, Map<String,String> headers, Serializer serializer, Contract contract) 
+        throws IOException {
+
         if (headers == null) {
             headers = new HashMap<String,String>();
         }
 
         this.endpoint = endpoint;
         this.serializer = serializer;
+        this.contract = contract;
         this.headers = headers;
         this.headers.put("Content-Type", "application/json");
-        loadContract();
+
+        if (contract == null) {
+            loadContract();
+        }
     }
 
     /**
-     * Returns the HTTP headers associated with this Transport. 
+     * Returns the HTTP headers associated with this HttpTransport. 
      * This returns an immutable copy of the headers map, so its
      * contents may not be modified.
      */
     public Map<String,String> getHeaders() {
         return Collections.unmodifiableMap(headers);
+    }
+
+    /**
+     * Returns the endpoint associated with this HttpTransport
+     */
+    public String getEndpoint() {
+        return this.endpoint;
+    }
+
+    /**
+     * Returns the Serializer associated with this HttpTransport
+     */
+    public Serializer getSerializer() {
+        return this.serializer;
     }
 
     @SuppressWarnings("unchecked")
