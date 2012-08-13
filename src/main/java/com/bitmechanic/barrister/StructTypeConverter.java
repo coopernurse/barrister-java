@@ -51,7 +51,7 @@ public class StructTypeConverter extends BaseTypeConverter {
             return returnNullIfOptional();
         }
         else if (!(o instanceof Map)) {
-            String msg = "struct " + s.getName() + " val must be Map, got: " + 
+            String msg = "struct " + s.getName() + " val must be Map, got: " +
                 o.getClass().getName();
             throw RpcException.Error.INVALID_PARAMS.exc(msg);
         }
@@ -62,7 +62,7 @@ public class StructTypeConverter extends BaseTypeConverter {
             inst = getTypeClass().newInstance();
         }
         catch (Exception e) {
-            String msg = "Unable to create: " + 
+            String msg = "Unable to create: " +
                e.getClass().getSimpleName() + ": " + e.getMessage();
             throw RpcException.Error.INTERNAL.exc(msg);
         }
@@ -83,7 +83,7 @@ public class StructTypeConverter extends BaseTypeConverter {
                 Field f = allFields.get(name);
                 if (f == null) {
                     // Field exists on generated Java class that isn't in the IDL
-                    String msg = "field '" + name + "' missing from: " + s.getName() + 
+                    String msg = "field '" + name + "' missing from: " + s.getName() +
                         " - are generated classes in sync with IDL?";
                     throw RpcException.Error.INVALID_PARAMS.exc(msg);
                 }
@@ -101,7 +101,7 @@ public class StructTypeConverter extends BaseTypeConverter {
 
                 Object val = input.get(name);
                 val = f.getTypeConverter().unmarshal(val);
-                
+
                 try {
                     m.invoke(inst, val);
                 }
@@ -155,12 +155,18 @@ public class StructTypeConverter extends BaseTypeConverter {
                         val = m.invoke(o);
                     }
                     catch (Exception e) {
-                        String msg = s.getName() + "." + name + 
+                        String msg = s.getName() + "." + name +
                             " unable to invoke getter - " + e.getMessage();
                         throw RpcException.Error.INTERNAL.exc(msg);
                     }
 
-                    if (val != null) {
+                    if (val == null) {
+                        if (!f.isOptional()) {
+                            String msg = s.getName() + "." + name + " cannot be null";
+                            throw RpcException.Error.INVALID_RESP.exc(msg);
+                        }
+                    }
+                    else {
                         val = f.getTypeConverter().marshal(val);
                         map.put(name, val);
                     }
