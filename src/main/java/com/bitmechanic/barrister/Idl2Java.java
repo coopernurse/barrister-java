@@ -179,11 +179,11 @@ public class Idl2Java {
 
         line(0, "");
         line(1, "@Override");
-        line(1, "public boolean equals(Object other) {");
-        line(2, "if (this == other) { return true; }");
-        line(2, "if (other == null) { return false; }");
-        line(2, "if (!(other instanceof " + s.getName() + ")) { return false; }");
-        line(2, s.getName() + " _o = (" + s.getName() + ")other;");
+        line(1, "public boolean equals(Object _other) {");
+        line(2, "if (this == _other) { return true; }");
+        line(2, "if (_other == null) { return false; }");
+        line(2, "if (!(_other instanceof " + s.getName() + ")) { return false; }");
+        line(2, s.getName() + " _o = (" + s.getName() + ")_other;");
         if (hasParent) {
             line(2, "if (!super.equals(_o)) { return false; }");
         }
@@ -202,12 +202,18 @@ public class Idl2Java {
         line(0, "");
         line(1, "@Override");
         line(1, "public int hashCode() {");
-        line(2, "int hash = super.hashCode();");
+        line(2, "int _hash = 0;");
         for (Field f : s.getFields().values()) {
-            line(2, "hash = hash * 31 + (" + f.getName() + " == null ? 0 : " + 
-                 f.getName() + ".hashCode());");
+            if (f.isArray()) {
+                line(2, "_hash = _hash * 31 + (" + f.getName() + " == null ? 0 : java.util.Arrays.hashCode(" + 
+                     f.getName() + "));");
+            }
+            else {
+                line(2, "_hash = _hash * 31 + (" + f.getName() + " == null ? 0 : " + 
+                     f.getName() + ".hashCode());");
+            }
         }
-        line(2, "return hash;");
+        line(2, "return _hash;");
         line(1, "}");
 
         line(0, "}");
