@@ -20,6 +20,7 @@ public class Server {
 
     private Contract contract;
     private Map<String, Object> handlers;    
+    private List<Filter> filters;
 
     /**
      * Creates a new Server for the given Contract
@@ -31,6 +32,7 @@ public class Server {
 
         this.contract = c;
         this.handlers = new HashMap<String,Object>();
+        this.filters  = new ArrayList<Filter>();
     }
 
     /** 
@@ -38,6 +40,25 @@ public class Server {
      */
     public Contract getContract() {
         return this.contract;
+    }
+
+    /**
+     * Adds a filter implementation to this Server.  Filters will be invoked
+     * per request.
+     */
+    public void addFilter(Filter filter) {
+        if (filter != null) {
+            this.filters.add(filter);
+        }
+    }
+
+    /**
+     * Removes a previously added filter
+     */
+    public void removeFilter(Filter filter) {
+        if (filter != null) {
+            this.filters.remove(filter);
+        }
     }
 
     /**
@@ -113,12 +134,54 @@ public class Server {
     }
 
     /**
-     * Calls the method associated with the RpcRequest and wraps the result as a RpcResponse
+     * Calls the method associated with the RpcRequest and wraps the result as a RpcResponse.
+     *
+     * Filters are executed in 3 batches.
+     *
+     * * For each filter (in order registered): filter.alterRequest()
+     * * For each filter (in order registered): filter.preInvoke().  If any filter returns a non-null RpcResponse,
+     *   the loop is terminated and invoke on the handler skipped.  postInvoke() loop below still runs.
+     * * If no filter returns a non-null RpcResponse, then the handler is invoked based on the method in the RpcRequest
+     *   (this is the common case)
+     * * For each filter (reverse order registered): filter.postInvoke() is executed.  All filters are executed in this
+     *   loop.
+     * * Last RpcResponse is returned
      *
      * @param req Request to process
      * @return RpcResponse that pairs with this request.  May contain a result or an error
      */
     public RpcResponse call(RpcRequest req) {
+        for (Filter filter : filters) {
+            RpcRequest tmp = filter.alterRequest(req);
+            if (tmp != null) {
+                req = tmp;
+            }
+        }
+
+        RpcResponse resp = null;
+
+        for (Filter filter : filters) {
+            resp = filter.preInvoke(req);
+            if (resp != null) {
+                break;
+            }
+        }
+
+        if (resp == null) {
+            resp = callInternal(req);
+        }
+
+        for (int i = filters.size() - 1; i >= 0; i--) {
+            RpcResponse tmp = filters.get(i).postInvoke(req, resp);
+            if (tmp != null) {
+                resp = tmp;
+            }
+        }
+
+        return resp;
+    }
+
+    private RpcResponse callInternal(RpcRequest req) {
         if (req.getFunc().equals("barrister-idl")) {
             return new RpcResponse(req, contract.getIdl());
         }
