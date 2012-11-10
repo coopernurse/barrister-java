@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -207,8 +208,7 @@ public class Server {
                 String msg = "barrister-java: InvocationTargetException - Uncaught error executing: " + req.getFunc() +
                     " class: " + target.getClass().getName() + 
                     " message: " + target.getMessage();
-                logger.severe(msg);
-                logger.throwing("Server", "call", target);
+                logger.log(Level.SEVERE, msg, target);
                 resp = new RpcResponse(req, RpcException.Error.UNKNOWN.exc(msg));
             }
         }
@@ -221,8 +221,7 @@ public class Server {
                 String msg = "barrister-java: Uncaught error executing: " + req.getFunc() +
                     " class: " + t.getClass().getName() + 
                     " message: " + t.getMessage();
-                logger.severe(msg);
-                logger.throwing("Server", "call", t);
+                logger.log(Level.SEVERE, msg, t);
                 rpcExc = RpcException.Error.UNKNOWN.exc(msg);
             }
             resp = new RpcResponse(req, rpcExc);
