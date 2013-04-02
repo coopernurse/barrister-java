@@ -344,7 +344,6 @@ public class Idl2Java {
     }
 
     private void toFile(String pkgName, String className) throws Exception {
-        out("toFile: pkgName=" + pkgName + " className=" + className);
         String dirName = mkdirForPackage(pkgName);
         String outfile = dirName + File.separator + className + ".java";
         out("Writing file: " + outfile);
