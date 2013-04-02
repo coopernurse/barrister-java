@@ -14,7 +14,7 @@ public class EnumTypeConverter extends BaseTypeConverter {
 
     public Class getTypeClass() {
         try {
-            return Class.forName(e.getContract().getPackage() + "." + e.getName());
+            return Class.forName(e.getContract().getClassNameForEntity(e.getName()));
         }
         catch (Exception e) {
             throw new RuntimeException(e);

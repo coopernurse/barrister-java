@@ -32,7 +32,7 @@ public class StructTypeConverter extends BaseTypeConverter {
      */
     public Class getTypeClass() {
         try {
-            return Class.forName(s.getContract().getPackage() + "." + s.getName());
+            return Class.forName(s.getContract().getClassNameForEntity(s.getName()));
         }
         catch (Exception e) {
             throw new RuntimeException(e);

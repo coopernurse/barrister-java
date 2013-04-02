@@ -78,6 +78,7 @@ public class Contract extends BaseEntity {
     private List<Map<String,Object>> idl;
 
     private String packageName;
+    private String nsPackageName;
 
     public Contract() {
         interfaces = new HashMap<String, Interface>();
@@ -135,6 +136,34 @@ public class Contract extends BaseEntity {
      */
     public String getPackage() {
         return packageName;
+    }
+
+    /**
+     * Sets the base Java package for namespaced entities associated with this Contract. 
+     * This is used instead of getPackage() for entities that are namespaced. 
+     */
+    public void setNsPackage(String pkgName) {
+        this.nsPackageName = pkgName;
+    }
+    
+    /**
+     * Returns the base Java package for namespaced entities associated with this Contract.
+     * If no nsPackage is set, this method returns the same value as getPackage().
+     */
+    public String getNsPackage() {
+        return (nsPackageName == null) ? getPackage() : nsPackageName;
+    }
+
+    /**
+     * Returns a fully qualified class name for the given struct/enum/interface
+     * name.  If the name is namespaced, nsPackage is used.  Otherise package is
+     * used to prefix the name.
+     */
+    public String getClassNameForEntity(String name) {
+        if (name.indexOf(".") > -1)
+            return getNsPackage() + "." + name;
+        else
+            return getPackage() + "." + name;
     }
 
     /**

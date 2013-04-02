@@ -3,6 +3,7 @@ package com.bitmechanic.barrister.conform;
 import com.bitmechanic.barrister.RpcException;
 import com.bitmechanic.barrister.RpcRequest;
 import com.bitmechanic.test.*;
+import com.bitmechanic.test.inc.*;
 import java.util.List;
 import java.util.ArrayList;
 
