@@ -39,6 +39,31 @@ public abstract class BaseEntity {
     }
 
     /**
+     * Returns name of entity without namespace. If name has no
+     * namspace, this method returns a value identical to getName()
+     */
+    public String getSimpleName() {
+        String n = getName();
+        int pos = n.indexOf(".");
+        if (pos == -1)
+            return n;
+        else
+            return n.substring(pos+1);
+    }
+
+    /**
+     * Returns namespace for entity. If entity is not namespaced,
+     * returns an empty string
+     */
+    public String getNamespace() {
+        int pos = name.indexOf(".");
+        if (pos == -1)
+            return "";
+        else
+            return name.substring(0, pos);
+    }
+
+    /**
      * Returns name of entity using Java camel case convention.
      * For example, name "firstName" becomes "FirstName"
      */

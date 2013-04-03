@@ -22,6 +22,7 @@ public class Idl2Java {
         String idlFile = null;
         String pkgName = null;
         String outDir = null;
+        String nsPkgName = null;
 
         for (int i = 0; i < argv.length; i++) {
             if (argv[i].equals("-j")) {
@@ -33,14 +34,21 @@ public class Idl2Java {
             else if (argv[i].equals("-o")) {
                 outDir = argv[++i];
             }
+            else if (argv[i].equals("-b")) {
+                nsPkgName = argv[++i];
+            }
         }
 
         if (isBlank(idlFile) || isBlank(pkgName) || isBlank(outDir)) {
-            out("Usage: java com.bitmechanic.barrister.Idl2Java -j [idl file] -p [Java package name] -o [out dir]");
+            out("Usage: java com.bitmechanic.barrister.Idl2Java -j [idl file] -p [Java package prefix] -b [Java package prefix for namespaced entities] -o [out dir]");
             System.exit(1);
         }
 
-        new Idl2Java(idlFile, pkgName, outDir);
+        if (nsPkgName == null) {
+            nsPkgName = pkgName;
+        }
+
+        new Idl2Java(idlFile, pkgName, nsPkgName, outDir);
     }
 
     private static boolean isBlank(String s) {
@@ -55,28 +63,26 @@ public class Idl2Java {
 
     static String newline = System.getProperty("line.separator");
 
-    private String dirName;
+    private String outDir;
     private String pkgName;
+    private String nsPkgName;
 
     private Contract contract;
     private StringBuilder sb;
     
-    public Idl2Java(String idlJson, String pkgName, String outDir) throws Exception {
+    public Idl2Java(String idlJson, String pkgName, String nsPkgName, String outDir) throws Exception {
         out("Reading IDL from: " + idlJson);
         contract = Contract.load(new File(idlJson));
 
         out("Using package name: " + pkgName);
-        this.pkgName = pkgName;        
+        this.pkgName = pkgName; 
 
-        dirName = outDir + File.separator + pkgName.replace('.', File.separatorChar);
- 
-        File dir = new File(dirName);
-        if (!dir.exists()) {
-            out("Creating directory: " + dirName);
-            if (!dir.mkdirs()) {
-                throw new Exception("Unable to create: " + dirName);
-            }
-        }
+        if (nsPkgName != null) {
+            out("Using base package for namespaced entities: " + nsPkgName);
+            this.nsPkgName = nsPkgName;
+        } 
+
+        this.outDir = outDir;
 
         for (Struct s : contract.getStructs().values()) {
             generate(s);
@@ -94,7 +100,7 @@ public class Idl2Java {
     }
 
     private void generate(Map<String,Object> meta) throws Exception {
-        start();
+        start(pkgName);
         line(0, "public class BarristerMeta {");
         line(0, "");
         for (String key : meta.keySet()) {
@@ -108,24 +114,26 @@ public class Idl2Java {
             }
             line(1, "public static final " + type + " " + key.toUpperCase() + " = " + val + ";");
         }
+        line(1, "public static final String PACKAGE_NAME=\"" + pkgName + "\";");
+        line(1, "public static final String NS_PACKAGE_NAME=\"" + nsPkgName + "\";");
         line(0, "");
         line(0, "}");
-        toFile("BarristerMeta");
+        toFile(pkgName, "BarristerMeta");
     }
 
     private void generate(Struct s) throws Exception {
-        start();
+        start(packageFor(s.getName()));
         boolean hasParent = false;
         String extend = " implements com.bitmechanic.barrister.BStruct";
         if (!isBlank(s.getExtends())) {
             hasParent = true;
-            extend = " extends " + s.getExtends();
+            extend = " extends " + namespace(s.getExtends());
         }
-        line(0, "public class " + s.getName() + extend + " {");
+        line(0, "public class " + s.getSimpleName() + extend + " {");
 
         line(0, "");
         for (Field f : s.getFields().values()) {
-            line(1, "private " + f.getJavaType() + " " + f.getName() + ";");
+            line(1, "private " + namespace(f.getJavaType()) + " " + f.getName() + ";");
         }
 
         Map<String,Field> allFields = s.getFieldsPlusParents();
@@ -133,13 +141,13 @@ public class Idl2Java {
         line(1, "public static class Builder {");
         for (String name : allFields.keySet()) {
             Field f = allFields.get(name);
-            line(2, "private " + f.getJavaType() + " _" + f.getName() + ";");
-            line(2, "public Builder " + f.getName() + "(" + f.getJavaType() + 
+            line(2, "private " + namespace(f.getJavaType()) + " _" + f.getName() + ";");
+            line(2, "public Builder " + f.getName() + "(" + namespace(f.getJavaType()) + 
                  " " + f.getName() + ") { " +
                  "this._" + f.getName() + " = " + f.getName() + "; return this; }");
         }
-        line(2, "public " + s.getName() + " build() {");
-        line(3, s.getName() + " _tmp = new " + s.getName() + "();");
+        line(2, "public " + s.getSimpleName() + " build() {");
+        line(3, s.getSimpleName() + " _tmp = new " + s.getSimpleName() + "();");
         for (String name : allFields.keySet()) {
             Field f = allFields.get(name);
             line(3, "_tmp.set" + f.getUpperName() + "(_" + f.getName() + ");");
@@ -150,13 +158,13 @@ public class Idl2Java {
 
         for (Field f : s.getFields().values()) {
             line(0, "");
-            line(1, "public void set" + f.getUpperName() + "(" + f.getJavaType() + 
+            line(1, "public void set" + f.getUpperName() + "(" + namespace(f.getJavaType()) + 
                  " " + f.getName() + ") {");
             line(2, "this." + f.getName() + " = " + f.getName() + ";");
             line(1, "}");
 
             line(0, "");
-            line(1, "public " + f.getJavaType() + " get" + f.getUpperName() + "() {");
+            line(1, "public " + namespace(f.getJavaType()) + " get" + f.getUpperName() + "() {");
             line(2, "return this." + f.getName() + ";");
             line(1, "}");
         }
@@ -182,8 +190,8 @@ public class Idl2Java {
         line(1, "public boolean equals(Object _other) {");
         line(2, "if (this == _other) { return true; }");
         line(2, "if (_other == null) { return false; }");
-        line(2, "if (!(_other instanceof " + s.getName() + ")) { return false; }");
-        line(2, s.getName() + " _o = (" + s.getName() + ")_other;");
+        line(2, "if (!(_other instanceof " + s.getSimpleName() + ")) { return false; }");
+        line(2, s.getSimpleName() + " _o = (" + s.getSimpleName() + ")_other;");
         if (hasParent) {
             line(2, "if (!super.equals(_o)) { return false; }");
         }
@@ -226,8 +234,8 @@ public class Idl2Java {
     }
 
     private void generate(Enum en) throws Exception {
-        start();
-        line(0, "public enum " + en.getName() + " {");
+        start(packageFor(en.getName()));
+        line(0, "public enum " + en.getSimpleName() + " {");
 
         StringBuilder vals = new StringBuilder();
         for (String v : en.getValues()) {
@@ -244,7 +252,8 @@ public class Idl2Java {
     }
 
     private void generate(Interface iface) throws Exception {
-        start();
+        String pkgName = packageFor(iface.getName());
+        start(pkgName);
         line(0, "");
         line(0, "public interface " + iface.getName() + " {");
         line(0, "");
@@ -254,24 +263,25 @@ public class Idl2Java {
                 if (params.length() > 0) {
                     params.append(", ");
                 }
-                params.append(p.getJavaType()).append(" ").append(p.getName());
+                params.append(namespace(p.getJavaType())).append(" ").append(p.getName());
             }
 
-            line(1, "public " + f.getReturns().getJavaType() + " " +
+            line(1, "public " + namespace(f.getReturns().getJavaType()) + " " +
                  f.getName() + "(" + params + ") throws com.bitmechanic.barrister.RpcException;");
         }
         line(0, "");
         line(0, "}");
         toFile(iface);
 
-        String className = iface.getName() + "Client";
-        start();
+        String className = iface.getSimpleName() + "Client";
+        start(pkgName);
         line(0, "public class " + className + " implements " + iface.getName() + " {");
         line(0, "");
         line(1, "private com.bitmechanic.barrister.Transport _trans;");
         line(0, "");
         line(1, "public " + className + "(com.bitmechanic.barrister.Transport trans) {");
         line(2, "trans.getContract().setPackage(\"" + pkgName + "\");");
+        line(2, "trans.getContract().setNsPackage(\"" + nsPkgName + "\");");
         line(2, "this._trans = trans;");
         line(1, "}");
         for (Function f : iface.getFunctions()) {
@@ -282,12 +292,12 @@ public class Idl2Java {
                     params.append(", ");
                     paramNames.append(", ");
                 }
-                params.append(p.getJavaType()).append(" ").append(p.getName());
+                params.append(namespace(p.getJavaType())).append(" ").append(p.getName());
                 paramNames.append(p.getName());
             }
 
             line(0, "");
-            line(1, "public " + f.getReturns().getJavaType() + " " +
+            line(1, "public " + namespace(f.getReturns().getJavaType()) + " " +
                  f.getName() + "(" + params + ") throws com.bitmechanic.barrister.RpcException {");
             if (f.getParams().size() == 0) {
                 line(2, "Object _params = null;");
@@ -301,7 +311,7 @@ public class Idl2Java {
             line(3, "return null;");
             line(2, "}");
             line(2, "else if (_resp.getError() == null) {");
-            line(3, "return (" + f.getReturns().getJavaType() + ")_resp.getResult();");
+            line(3, "return (" + namespace(f.getReturns().getJavaType()) + ")_resp.getResult();");
             line(2, "}");
             line(2, "else {");
             line(3, "throw _resp.getError();");
@@ -310,10 +320,10 @@ public class Idl2Java {
         }
         line(0, "");
         line(0, "}");
-        toFile(className);
+        toFile(pkgName, className);
     }
 
-    private void start() {
+    private void start(String pkgName) {
         sb = new StringBuilder();
         line(0, "package " + pkgName + ";");
         line(0, "");
@@ -335,16 +345,49 @@ public class Idl2Java {
     }
 
     private void toFile(BaseEntity b) throws Exception {
-        toFile(b.getName());
+        toFile(packageFor(b.getName()), b.getSimpleName());
     }
 
-    private void toFile(String className) throws Exception {
+    private void toFile(String pkgName, String className) throws Exception {
+        String dirName = mkdirForPackage(pkgName);
         String outfile = dirName + File.separator + className + ".java";
         out("Writing file: " + outfile);
 
         PrintWriter w = new PrintWriter(new FileWriter(outfile));
         w.println(sb.toString());
         w.close();
+    }
+
+    private String mkdirForPackage(String pkgName) {
+        String dirName = outDir + File.separator + pkgName.replace('.', File.separatorChar);
+ 
+        File dir = new File(dirName);
+        if (!dir.exists()) {
+            out("Creating directory: " + dirName);
+            if (!dir.mkdirs()) {
+                throw new RuntimeException("Unable to create directory: " + dirName);
+            }
+        }
+
+        return dirName;
+    }
+
+    private String packageFor(String javaType) {
+        if (nsPkgName != null && javaType.indexOf(".") > -1) {
+            return nsPkgName + "." + javaType.substring(0, javaType.indexOf(".")); 
+        }
+        else {
+            return pkgName;
+        }
+    }
+
+    private String namespace(String javaType) {
+        if (nsPkgName != null && javaType.indexOf(".") > -1) {
+            return nsPkgName + "." + javaType; 
+        }
+
+        // built-in types, or non-namespaced types need no prefix
+        return javaType;
     }
 
 }

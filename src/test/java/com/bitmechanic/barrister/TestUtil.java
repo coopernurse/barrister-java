@@ -11,6 +11,8 @@ public class TestUtil {
         InputStream is = 
             TestUtil.class.getClassLoader().getResourceAsStream(idlFile);
         Contract c = Contract.load(is);
+        c.setPackage(com.bitmechanic.test.BarristerMeta.PACKAGE_NAME);
+        c.setNsPackage(com.bitmechanic.test.BarristerMeta.NS_PACKAGE_NAME);
         is.close();
         return c;
     }

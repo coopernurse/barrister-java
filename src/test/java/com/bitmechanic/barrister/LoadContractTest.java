@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import com.bitmechanic.test.A;
 
 public class LoadContractTest {
 
@@ -33,16 +34,16 @@ public class LoadContractTest {
 
         assertEquals(5, c.getStructs().size());
 
-        Struct s = c.getStructs().get("Response");
+        Struct s = c.getStructs().get("inc.Response");
         Map<String,Field> fields = s.getFields();
         assertEquals(1, fields.size());
         assertEquals("", s.getExtends());
         assertEquals("status", fields.get("status").getName());
-        assertEquals("Status", fields.get("status").getType());
+        assertEquals("inc.Status", fields.get("status").getType());
 
         s = c.getStructs().get("RepeatResponse");
         fields = s.getFields();
-        assertEquals("Response", s.getExtends());
+        assertEquals("inc.Response", s.getExtends());
         assertEquals(2, fields.size());
         assertEquals("count", fields.get("count").getName());
         assertEquals("int", fields.get("count").getType());
@@ -56,7 +57,28 @@ public class LoadContractTest {
         expected.add("ok");
         expected.add("err");
         assertEquals(2, c.getEnums().size());
-        assertEquals(expected, c.getEnums().get("Status").getValues());
+        assertEquals(expected, c.getEnums().get("inc.Status").getValues());
+    }
+
+    @Test
+    public void testGetClassNameForEntity() throws Exception {
+        Contract c = TestUtil.loadConformContract();
+        c.setPackage("com.foo");
+        c.setNsPackage("com.ns");
+
+        assertEquals("com.foo.Person", c.getClassNameForEntity("Person"));
+        assertEquals("com.ns.common.Foo", c.getClassNameForEntity("common.Foo"));
+    }
+
+    @Test
+    public void testSetContractPackages() throws Exception {
+        Contract c = TestUtil.loadConformContract();
+        Server server = new Server(c);
+
+        server.setContractPackage(A.class);
+
+        assertEquals("com.bitmechanic.test", server.getContract().getPackage());
+        assertEquals("com.bitmechanic.test", server.getContract().getNsPackage());
     }
 
 }

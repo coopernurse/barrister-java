@@ -1,5 +1,6 @@
 package com.bitmechanic.barrister;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
 import java.io.IOException;
@@ -86,9 +87,24 @@ public class Server {
                                                " is not a part of this Contract");
         }
 
-        contract.setPackage(iface.getPackage().getName());
+        if (contract.getPackage() == null) {
+            setContractPackage(iface);
+        }
 
         handlers.put(iface.getSimpleName(), handler);
+    }
+
+    synchronized void setContractPackage(Class iface) {
+        contract.setPackage(iface.getPackage().getName());
+
+        try {
+            Class meta = Class.forName(contract.getPackage() + ".BarristerMeta");
+            Field nsPkg = meta.getField("NS_PACKAGE_NAME");
+            contract.setNsPackage((String)nsPkg.get(null));
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
