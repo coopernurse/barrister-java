@@ -255,20 +255,33 @@ public class HttpTransport implements Transport {
         }
 
         conn.addRequestProperty("Content-Length", String.valueOf(data.length));
-        
-        OutputStream os = conn.getOutputStream();
-        os.write(data);
-        os.flush();
 
-        InputStream is = conn.getInputStream();
-        os.close();
-        return is;
+        OutputStream os = null;
+        try {
+            os = conn.getOutputStream();
+            os.write(data);
+            os.flush();
+
+            return conn.getInputStream();
+        }
+        finally {
+            closeQuietly(os);
+        }
     }
 
     private void closeQuietly(InputStream is) {
         if (is != null) {
             try {
                 is.close();
+            }
+            catch (Exception e) { }
+        }
+    }
+
+    private void closeQuietly(OutputStream os) {
+        if (os != null) {
+            try {
+                os.close();
             }
             catch (Exception e) { }
         }

@@ -202,7 +202,12 @@ public class Idl2Java {
         line(0, "");
         line(1, "@Override");
         line(1, "public int hashCode() {");
-        line(2, "int _hash = 0;");
+        if (hasParent) {
+            line(2, "int _hash = super.hashCode();");
+        }
+        else {
+            line(2, "int _hash = 1;");
+        }
         for (Field f : s.getFields().values()) {
             if (f.isArray()) {
                 line(2, "_hash = _hash * 31 + (" + f.getName() + " == null ? 0 : java.util.Arrays.hashCode(" + 
