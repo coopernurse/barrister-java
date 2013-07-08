@@ -414,7 +414,7 @@ public class Idl2Java {
 
     private void toFile(String pkgName, String className) throws Exception {
         String dirName = mkdirForPackage(pkgName);
-        String outfile = dirName + File.separator + className + ".java";
+        String outfile = (dirName + File.separator + className + ".java").replace("/", File.separator);
         out("Writing file: " + outfile);
 
         PrintWriter w = new PrintWriter(new FileWriter(outfile));
@@ -423,7 +423,7 @@ public class Idl2Java {
     }
 
     private String mkdirForPackage(String pkgName) {
-        String dirName = outDir + File.separator + pkgName.replace('.', File.separatorChar);
+        String dirName = (outDir + File.separator + pkgName.replace('.', File.separatorChar)).replace("/", File.separator);
  
         File dir = new File(dirName);
         if (!dir.exists()) {
