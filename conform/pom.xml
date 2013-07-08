@@ -53,11 +53,13 @@
               <artifactId>barrister-maven-plugin</artifactId>
               <version>1.0-SNAPSHOT</version>
               <configuration>
-                  <barristerScript>${barristerBin}</barristerScript>
-                  <!--<barristerScript>http://barrister.bitmechanic.com/run</barristerScript>-->
+                  <!--<barristerScript>${barristerBin}</barristerScript>-->
+                  <barristerScript>http://barrister.bitmechanic.com/run</barristerScript>
                   <exclude>conform-inc.idl</exclude>
                   <basePackage>com.bitmechanic.test</basePackage>
                   <immutable>true</immutable>
+                  <clean>true</clean>
+                  <idlFiles>src/main/resources/idl</idlFiles>
               </configuration>
               <executions>
                   <execution>
