@@ -3,6 +3,8 @@ package com.bitmechanic.barrister;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.FileWriter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -23,6 +25,7 @@ public class Idl2Java {
         String pkgName = null;
         String outDir = null;
         String nsPkgName = null;
+        boolean immutable = false;
 
         for (int i = 0; i < argv.length; i++) {
             if (argv[i].equals("-j")) {
@@ -37,6 +40,9 @@ public class Idl2Java {
             else if (argv[i].equals("-b")) {
                 nsPkgName = argv[++i];
             }
+            else if (argv[i].equals("-i")) {
+                immutable = true;
+            }
         }
 
         if (isBlank(idlFile) || isBlank(pkgName) || isBlank(outDir)) {
@@ -48,7 +54,7 @@ public class Idl2Java {
             nsPkgName = pkgName;
         }
 
-        new Idl2Java(idlFile, pkgName, nsPkgName, outDir);
+        new Idl2Java(idlFile, pkgName, nsPkgName, outDir, immutable);
     }
 
     private static boolean isBlank(String s) {
@@ -66,16 +72,22 @@ public class Idl2Java {
     private String outDir;
     private String pkgName;
     private String nsPkgName;
+    private boolean immutable;
 
     private Contract contract;
     private StringBuilder sb;
     
-    public Idl2Java(String idlJson, String pkgName, String nsPkgName, String outDir) throws Exception {
+    public Idl2Java(String idlJson, String pkgName, String nsPkgName, String outDir, boolean immutable) throws Exception {
         out("Reading IDL from: " + idlJson);
         contract = Contract.load(new File(idlJson));
 
         out("Using package name: " + pkgName);
-        this.pkgName = pkgName; 
+        this.pkgName = pkgName;
+
+        this.immutable = immutable;
+        if (immutable) {
+            out("Creating immutable struct classes");
+        }
 
         if (nsPkgName != null) {
             out("Using base package for namespaced entities: " + nsPkgName);
@@ -136,36 +148,88 @@ public class Idl2Java {
             line(1, "private " + namespace(f.getJavaType()) + " " + f.getName() + ";");
         }
 
+        if (!immutable) {
+            line(0, "");
+            line(1, "public " + s.getSimpleName() + "() {");
+            line(2, "super();");
+            line(1, "}");
+        }
+
         Map<String,Field> allFields = s.getFieldsPlusParents();
+        Map<String,Field> myFields  = s.getFields();
+
+        StringBuilder allParams    = new StringBuilder();
+        StringBuilder parentParams = new StringBuilder();
+        for (String fieldName : s.getFieldNamesPlusParents()) {
+            Field f = allFields.get(fieldName);
+            if (!myFields.containsKey(fieldName)) {
+                if (parentParams.length() > 0) parentParams.append(", ");
+                parentParams.append(f.getName());
+            }
+
+            if (allParams.length() > 0) allParams.append(", ");
+            allParams.append(newline).append("            @org.codehaus.jackson.annotate.JsonProperty(\"").append(f.getName()).append("\") ")
+                    .append(namespace(f.getJavaType())).append(" ").append(f.getName());
+        }
+
+        line(0, "");
+        line(1, "@org.codehaus.jackson.annotate.JsonCreator");
+        line(1, "public " + s.getSimpleName() + "(" + allParams + ") {");
+        line(2, "super(" + parentParams + ");");
+        for (String fieldName : s.getFieldNames()) {
+            Field f = s.getFields().get(fieldName);
+            if (immutable && f.isArray()) {
+                line(2, "this." + f.getName() + " = (" + f.getName() + " == null) ? null : " + f.getName() + ".clone();");
+            }
+            else {
+                line(2, "this." + f.getName() + " = " + f.getName() + ";");
+            }
+        }
+        line(1, "}");
+
+        List<String> builderFields = new ArrayList<String>();
         line(0, "");
         line(1, "public static class Builder {");
-        for (String name : allFields.keySet()) {
+        for (String name : s.getFieldNamesPlusParents()) {
             Field f = allFields.get(name);
             line(2, "private " + namespace(f.getJavaType()) + " _" + f.getName() + ";");
-            line(2, "public Builder " + f.getName() + "(" + namespace(f.getJavaType()) + 
+            line(2, "public Builder " + f.getName() + "(" + namespace(f.getJavaType()) +
                  " " + f.getName() + ") { " +
                  "this._" + f.getName() + " = " + f.getName() + "; return this; }");
+            builderFields.add("this._" + f.getName());
         }
         line(2, "public " + s.getSimpleName() + " build() {");
-        line(3, s.getSimpleName() + " _tmp = new " + s.getSimpleName() + "();");
-        for (String name : allFields.keySet()) {
+        line(3, "return new " + s.getSimpleName() + "(" + join(builderFields, ", ") + ");");
+        line(2, "}");
+
+        line(0, "");
+        line(2, "public Builder() { }");
+        line(2, "public Builder(" + s.getSimpleName() + " obj) {");
+        for (String name : s.getFieldNamesPlusParents()) {
             Field f = allFields.get(name);
-            line(3, "_tmp.set" + f.getUpperName() + "(_" + f.getName() + ");");
+            line(3, "this._"+f.getName()+" = obj.get"+f.getUpperName()+"();");
         }
-        line(3, "return _tmp;");
         line(2, "}");
         line(1, "}");
 
         for (Field f : s.getFields().values()) {
-            line(0, "");
-            line(1, "public void set" + f.getUpperName() + "(" + namespace(f.getJavaType()) + 
-                 " " + f.getName() + ") {");
-            line(2, "this." + f.getName() + " = " + f.getName() + ";");
-            line(1, "}");
+            String thisName = "this." + f.getName();
+            if (!immutable) {
+                line(0, "");
+                line(1, "public void set" + f.getUpperName() + "(" + namespace(f.getJavaType()) +
+                     " " + f.getName() + ") {");
+                line(2, thisName + " = " + f.getName() + ";");
+                line(1, "}");
+            }
 
             line(0, "");
             line(1, "public " + namespace(f.getJavaType()) + " get" + f.getUpperName() + "() {");
-            line(2, "return this." + f.getName() + ";");
+            if (immutable && f.isArray()) {
+                line(2, "return " + thisName + " == null ? null : " + thisName + ".clone();");
+            }
+            else {
+                line(2, "return " + thisName + ";");
+            }
             line(1, "}");
         }
 
@@ -218,11 +282,11 @@ public class Idl2Java {
         }
         for (Field f : s.getFields().values()) {
             if (f.isArray()) {
-                line(2, "_hash = _hash * 31 + (" + f.getName() + " == null ? 0 : java.util.Arrays.hashCode(" + 
+                line(2, "_hash = _hash * 31 + (" + f.getName() + " == null ? 0 : java.util.Arrays.hashCode(" +
                      f.getName() + "));");
             }
             else {
-                line(2, "_hash = _hash * 31 + (" + f.getName() + " == null ? 0 : " + 
+                line(2, "_hash = _hash * 31 + (" + f.getName() + " == null ? 0 : " +
                      f.getName() + ".hashCode());");
             }
         }
@@ -388,6 +452,17 @@ public class Idl2Java {
 
         // built-in types, or non-namespaced types need no prefix
         return javaType;
+    }
+
+    private String join(List<String> list, String delim) {
+        StringBuilder sb = new StringBuilder();
+        if (list != null) {
+            for (String s : list) {
+                if (sb.length() > 0) { sb.append(delim); }
+                sb.append(s);
+            }
+        }
+        return sb.toString();
     }
 
 }

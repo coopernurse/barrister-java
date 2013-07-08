@@ -1,5 +1,6 @@
 package com.bitmechanic.barrister;
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.HashSet;
 public class Struct extends BaseEntity {
 
     private Map<String, Field> fields;
+    private List<String> fieldNames;
     private String extend;
 
     /**
@@ -21,6 +23,7 @@ public class Struct extends BaseEntity {
         this.name = name;
         this.extend = extend;
         this.fields = new HashMap<String,Field>();
+        this.fieldNames = new ArrayList<String>();
     }
 
     /**
@@ -33,6 +36,7 @@ public class Struct extends BaseEntity {
     public Struct(Map<String,Object> data) {
         super(data);
         fields = new HashMap<String,Field>();
+        fieldNames = new ArrayList<String>();
 
         extend = (String)data.get("extends");
         
@@ -40,6 +44,7 @@ public class Struct extends BaseEntity {
         for (Map<String,Object> f : flist) {
             Field field = new Field(f);
             fields.put(field.getName(), field);
+            fieldNames.add(field.getName());
         }
     }
 
@@ -69,6 +74,13 @@ public class Struct extends BaseEntity {
     }
 
     /**
+     * Returns a List of the Field names belonging to this Struct.
+     */
+    public List<String> getFieldNames() {
+        return fieldNames;
+    }
+
+    /**
      * Returns a Map of the Fields belonging to this Struct and all its ancestors.
      * Keys are the Field names.
      */
@@ -82,4 +94,16 @@ public class Struct extends BaseEntity {
         return tmp;
     }
 
+    /**
+     * Returns a List of the Field names belonging to this Struct and all its ancestors.
+     */
+    public List<String> getFieldNamesPlusParents() {
+        List<String> tmp = new ArrayList<String>();
+        tmp.addAll(getFieldNames());
+        if (extend != null && !extend.equals("")) {
+            Struct parent = contract.getStructs().get(extend);
+            tmp.addAll(parent.getFieldNamesPlusParents());
+        }
+        return tmp;
+    }
 }
