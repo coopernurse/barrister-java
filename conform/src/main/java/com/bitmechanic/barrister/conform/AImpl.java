@@ -1,8 +1,7 @@
 package com.bitmechanic.barrister.conform;
 
 import com.bitmechanic.barrister.RpcException;
-import com.bitmechanic.barrister.RpcRequest;
-import com.bitmechanic.test.*;
+import com.bitmechanic.test.conform.*;
 import com.bitmechanic.test.inc.*;
 import java.util.List;
 import java.util.ArrayList;
@@ -32,22 +31,16 @@ public class AImpl implements A {
     }
     
     public RepeatResponse repeat(RepeatRequest req1) throws RpcException {
-        RepeatResponse r = new RepeatResponse();
         String s = req1.getForce_uppercase() ? req1.getTo_repeat().toUpperCase() : req1.getTo_repeat();
         List<String> items = new ArrayList<String>();
         for (int i = 0; i < req1.getCount(); i++) {
             items.add(s);
         }
-        r.setItems(items.toArray(new String[0]));
-        r.setCount(req1.getCount());
-        r.setStatus(Status.ok);
-        return r;
+        return new RepeatResponse(req1.getCount(), items.toArray(new String[0]), Status.ok);
     }
     
     public HiResponse say_hi() throws RpcException {
-        HiResponse r = new HiResponse();
-        r.setHi("hi");
-        return r;
+        return new HiResponse("hi");
     }
     
     public Long[] repeat_num(Long num, Long count) throws RpcException {

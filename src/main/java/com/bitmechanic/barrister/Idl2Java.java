@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.io.FileWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -25,7 +26,8 @@ public class Idl2Java {
         String pkgName = null;
         String outDir = null;
         String nsPkgName = null;
-        boolean immutable = false;
+        boolean allImmutable = false;
+        List<String> immutableSubstr = new ArrayList<String>();
 
         for (int i = 0; i < argv.length; i++) {
             if (argv[i].equals("-j")) {
@@ -40,13 +42,16 @@ public class Idl2Java {
             else if (argv[i].equals("-b")) {
                 nsPkgName = argv[++i];
             }
+            else if (argv[i].equals("-s")) {
+                immutableSubstr.add(argv[++i]);
+            }
             else if (argv[i].equals("-i")) {
-                immutable = true;
+                allImmutable = true;
             }
         }
 
         if (isBlank(idlFile) || isBlank(pkgName) || isBlank(outDir)) {
-            out("Usage: java com.bitmechanic.barrister.Idl2Java -j [idl file] -p [Java package prefix] -b [Java package prefix for namespaced entities] -o [out dir]");
+            out("Usage: java com.bitmechanic.barrister.Idl2Java -j [idl file] -p [Java package prefix] -b [Java package prefix for namespaced entities] -o [out dir] -i -s [immutable class substr]");
             System.exit(1);
         }
 
@@ -54,7 +59,7 @@ public class Idl2Java {
             nsPkgName = pkgName;
         }
 
-        new Idl2Java(idlFile, pkgName, nsPkgName, outDir, immutable);
+        new Idl2Java(idlFile, pkgName, nsPkgName, outDir, allImmutable, immutableSubstr);
     }
 
     private static boolean isBlank(String s) {
@@ -69,24 +74,39 @@ public class Idl2Java {
 
     static String newline = System.getProperty("line.separator");
 
+    static Map<String,String> typeConverters;
+    static {
+        typeConverters = new HashMap<String,String>();
+        typeConverters.put("bool",   "com.bitmechanic.barrister.BoolTypeConverter");
+        typeConverters.put("int",    "com.bitmechanic.barrister.IntTypeConverter");
+        typeConverters.put("float",  "com.bitmechanic.barrister.FloatTypeConverter");
+        typeConverters.put("string", "com.bitmechanic.barrister.StringTypeConverter");
+    }
+
     private String outDir;
     private String pkgName;
     private String nsPkgName;
-    private boolean immutable;
+    private boolean allImmutable;
+    private List<String> immutableSubstr;
 
     private Contract contract;
     private StringBuilder sb;
     
-    public Idl2Java(String idlJson, String pkgName, String nsPkgName, String outDir, boolean immutable) throws Exception {
+    public Idl2Java(String idlJson, String pkgName, String nsPkgName, String outDir, boolean allImmutable, List<String> immutableSubstr) throws Exception {
         out("Reading IDL from: " + idlJson);
         contract = Contract.load(new File(idlJson));
 
         out("Using package name: " + pkgName);
         this.pkgName = pkgName;
 
-        this.immutable = immutable;
-        if (immutable) {
+        this.allImmutable    = allImmutable;
+        this.immutableSubstr = (immutableSubstr == null) ? new ArrayList<String>() : immutableSubstr;
+
+        if (allImmutable) {
             out("Creating immutable struct classes");
+        }
+        else if (!immutableSubstr.isEmpty()) {
+            out("Creating immutable struct classes for: " + immutableSubstr);
         }
 
         if (nsPkgName != null) {
@@ -134,32 +154,19 @@ public class Idl2Java {
     }
 
     private void generate(Struct s) throws Exception {
-        start(packageFor(s.getName()));
+        String pkgName = packageFor(s.getName());
+        boolean immutable = isImmutable(pkgName+"."+s.getSimpleName());
+        start(pkgName);
         boolean hasParent = false;
         String extend = " implements com.bitmechanic.barrister.BStruct";
-        if (!isBlank(s.getExtends())) {
-            hasParent = true;
-            extend = " extends " + namespace(s.getExtends());
-        }
-        line(0, "public class " + s.getSimpleName() + extend + " {");
-
-        line(0, "");
-        for (Field f : s.getFields().values()) {
-            line(1, "private " + namespace(f.getJavaType()) + " " + f.getName() + ";");
-        }
-
-        if (!immutable) {
-            line(0, "");
-            line(1, "public " + s.getSimpleName() + "() {");
-            line(2, "super();");
-            line(1, "}");
-        }
 
         Map<String,Field> allFields = s.getFieldsPlusParents();
         Map<String,Field> myFields  = s.getFields();
+        List<String> mapConstructorArgs  = new ArrayList<String>();
 
         StringBuilder allParams    = new StringBuilder();
         StringBuilder parentParams = new StringBuilder();
+
         for (String fieldName : s.getFieldNamesPlusParents()) {
             Field f = allFields.get(fieldName);
             if (!myFields.containsKey(fieldName)) {
@@ -170,23 +177,18 @@ public class Idl2Java {
             if (allParams.length() > 0) allParams.append(", ");
             allParams.append(newline).append("            @org.codehaus.jackson.annotate.JsonProperty(\"").append(f.getName()).append("\") ")
                     .append(namespace(f.getJavaType())).append(" ").append(f.getName());
+
+            mapConstructorArgs.add(String.format("            (%s)%s", namespace(f.getJavaType()), unmarshalFunc(f, "_map.get(\"" + f.getName() + "\")")));
         }
 
+        if (!isBlank(s.getExtends())) {
+            hasParent = true;
+            extend = " extends " + namespace(s.getExtends());
+        }
+        line(0, "public class " + s.getSimpleName() + extend + " {");
         line(0, "");
-        line(1, "@org.codehaus.jackson.annotate.JsonCreator");
-        line(1, "public " + s.getSimpleName() + "(" + allParams + ") {");
-        line(2, "super(" + parentParams + ");");
-        for (String fieldName : s.getFieldNames()) {
-            Field f = s.getFields().get(fieldName);
-            if (immutable && f.isArray()) {
-                line(2, "this." + f.getName() + " = (" + f.getName() + " == null) ? null : " + f.getName() + ".clone();");
-            }
-            else {
-                line(2, "this." + f.getName() + " = " + f.getName() + ";");
-            }
-        }
-        line(1, "}");
 
+        // Generate Builder inner class
         List<String> builderFields = new ArrayList<String>();
         line(0, "");
         line(1, "public static class Builder {");
@@ -194,8 +196,8 @@ public class Idl2Java {
             Field f = allFields.get(name);
             line(2, "private " + namespace(f.getJavaType()) + " _" + f.getName() + ";");
             line(2, "public Builder " + f.getName() + "(" + namespace(f.getJavaType()) +
-                 " " + f.getName() + ") { " +
-                 "this._" + f.getName() + " = " + f.getName() + "; return this; }");
+                    " " + f.getName() + ") { " +
+                    "this._" + f.getName() + " = " + f.getName() + "; return this; }");
             builderFields.add("this._" + f.getName());
         }
         line(2, "public " + s.getSimpleName() + " build() {");
@@ -210,6 +212,42 @@ public class Idl2Java {
             line(3, "this._"+f.getName()+" = obj.get"+f.getUpperName()+"();");
         }
         line(2, "}");
+        line(1, "}");
+
+        line(0, "");
+        for (Field f : s.getFields().values()) {
+            line(1, "private " + namespace(f.getJavaType()) + " " + f.getName() + ";");
+        }
+
+        if (!immutable) {
+            line(0, "");
+            line(1, "public " + s.getSimpleName() + "() {");
+            line(2, "super();");
+            line(1, "}");
+        }
+
+        // Generate constructors
+
+        line(0, "");
+        line(1, String.format("public %s(java.util.Map _map) throws com.bitmechanic.barrister.RpcException {", s.getSimpleName()));
+        line(2, String.format("this(", s.getSimpleName()));
+        line(0, join(mapConstructorArgs, ","+newline));
+        line(2, ");");
+        line(1, "}");
+
+        line(0, "");
+        line(1, "@org.codehaus.jackson.annotate.JsonCreator");
+        line(1, "public " + s.getSimpleName() + "(" + allParams + ") {");
+        line(2, "super(" + parentParams + ");");
+        for (String fieldName : s.getFieldNames()) {
+            Field f = s.getFields().get(fieldName);
+            if (immutable && f.isArray()) {
+                line(2, "this." + f.getName() + " = (" + f.getName() + " == null) ? null : " + f.getName() + ".clone();");
+            }
+            else {
+                line(2, "this." + f.getName() + " = " + f.getName() + ";");
+            }
+        }
         line(1, "}");
 
         for (Field f : s.getFields().values()) {
@@ -310,6 +348,45 @@ public class Idl2Java {
         }
         vals.append(";");
         line(1, vals.toString());
+
+        line(0, "");
+        line(1, String.format("public static %s[] unmarshalList(Object _obj, boolean _optional) throws com.bitmechanic.barrister.RpcException {", en.getSimpleName()));
+        line(2, "if (_obj == null && !_optional) {");
+        line(3, String.format("throw com.bitmechanic.barrister.RpcException.Error.INVALID_PARAMS.exc(\"%s list cannot be null\");", en.getSimpleName()));
+        line(2, "}");
+        line(2, "if (_obj == null) {");
+        line(3, "return null;");
+        line(2, "}");
+        line(2, "else if (_obj instanceof java.util.List) {");
+        line(3, "java.util.List _list = (java.util.List)_obj;");
+        line(3, String.format("%s[] _arr = new %s[_list.size()];", en.getSimpleName(), en.getSimpleName()));
+        line(3, "for (int i = 0; i < _arr.length; i++) {");
+        line(4, "_arr[i] = unmarshal(_list.get(i), _optional);");
+        line(3, "}");
+        line(3, "return _arr;");
+        line(2, "}");
+        line(2, "else {");
+        line(3, String.format("throw com.bitmechanic.barrister.RpcException.Error.INVALID_PARAMS.exc(\"%s.unmarshalList expects List, got: \" + _obj.getClass().getSimpleName());", en.getSimpleName()));
+        line(2, "}");
+        line(1, "}");
+
+        line(0, "");
+        line(1, String.format("public static %s unmarshal(Object _obj, boolean _optional) throws com.bitmechanic.barrister.RpcException {", en.getSimpleName()));
+        line(2, "if (_obj == null && !_optional) {");
+        line(3, String.format("throw com.bitmechanic.barrister.RpcException.Error.INVALID_PARAMS.exc(\"%s cannot be null\");", en.getSimpleName()));
+        line(2, "}");
+        line(2, "if (_obj == null) {");
+        line(3, "return null;");
+        line(2, "}");
+        line(2, "else {");
+        line(3, "try {");
+        line(4, String.format("return %s.valueOf(_obj.toString());", en.getSimpleName()));
+        line(3, "}");
+        line(3, "catch (Exception _e) {");
+        line(4, String.format("throw com.bitmechanic.barrister.RpcException.Error.INVALID_PARAMS.exc(\"String: \" + _obj + \" is not in the %s enum: \" + values());", en.getSimpleName()));
+        line(3, "}");
+        line(2, "}");
+        line(1, "}");
 
         line(0, "}");
         toFile(en);
@@ -454,6 +531,35 @@ public class Idl2Java {
         return javaType;
     }
 
+    private String unmarshalFunc(Field f, String objInstanceCode) {
+        String funcCallCode = String.format("(%s, %s)", objInstanceCode, String.valueOf(f.isOptional()));
+        if (f.isPrimitive()) {
+            String typeConverter = typeConverters.get(f.getType());
+            if (f.isArray()) {
+                return typeConverter + ".unmarshalList" + funcCallCode;
+            }
+            else {
+                return typeConverter + ".unmarshal" + funcCallCode;
+            }
+        }
+        else if (contract.getEnums().get(f.getType()) != null) {
+            if (f.isArray()) {
+                return namespace(f.getJavaType(false)) + ".unmarshalList" + funcCallCode;
+            }
+            else {
+                return namespace(f.getJavaType(false)) + ".unmarshal" + funcCallCode;
+            }
+        }
+        else {
+            if (f.isArray()) {
+                return String.format("com.bitmechanic.barrister.ArrayTypeConverter.unmarshalList(%s.class, %s, %s)", namespace(f.getJavaType(false)), objInstanceCode, String.valueOf(f.isOptional()));
+            }
+            else {
+                return String.format("com.bitmechanic.barrister.StructTypeConverter.unmarshal(%s.class, %s, %s)", namespace(f.getJavaType(false)), objInstanceCode, String.valueOf(f.isOptional()));
+            }
+        }
+    }
+
     private String join(List<String> list, String delim) {
         StringBuilder sb = new StringBuilder();
         if (list != null) {
@@ -463,6 +569,20 @@ public class Idl2Java {
             }
         }
         return sb.toString();
+    }
+
+    private boolean isImmutable(String className) {
+        if (allImmutable) {
+            return true;
+        }
+
+        for (String s : immutableSubstr) {
+            if (!s.isEmpty() && className.contains(s)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
 }

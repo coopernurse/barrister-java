@@ -2,9 +2,6 @@ package com.bitmechanic.barrister;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 

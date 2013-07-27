@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Represents an IDL 'struct'. 
@@ -49,7 +50,7 @@ public class Struct extends BaseEntity {
     }
 
     /**
-     * Sets the Contract associated with this Struct.  Propegates to Fields.
+     * Sets the Contract associated with this Struct.  Propagates to Fields.
      */
     @Override
     public void setContract(Contract c) {
@@ -106,4 +107,14 @@ public class Struct extends BaseEntity {
         }
         return tmp;
     }
+
+    public Set<String> getDescendantFieldNames() {
+        Set<String> names = new HashSet<String>();
+        List<Struct> descendants = contract.getStructDescendants(this);
+        for (Struct s : descendants) {
+            names.addAll(s.getFieldNames());
+        }
+        return names;
+    }
+
 }

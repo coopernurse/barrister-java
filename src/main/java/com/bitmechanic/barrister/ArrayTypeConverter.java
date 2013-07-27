@@ -1,8 +1,11 @@
 package com.bitmechanic.barrister;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Arrays;
 import java.lang.reflect.Array;
+import java.util.Map;
 
 /**
  * TypeConverter implementation for array types. This class wraps the 
@@ -78,6 +81,33 @@ public class ArrayTypeConverter extends BaseTypeConverter {
         else {
             throw RpcException.Error.INVALID_RESP.exc("Expected array, got: " +
                                                       o.getClass().getSimpleName());
+        }
+    }
+
+    public static Object unmarshalList(Class clazz, Object o, boolean isOptional) throws RpcException {
+        if (o == null) {
+            return BaseTypeConverter.returnNullIfOptional(isOptional);
+        }
+        else if (o instanceof List) {
+            List input = (List)o;
+            Object arr[] = (Object[])Array.newInstance(clazz, input.size());
+            for (int i = 0; i < arr.length; i++) {
+                arr[i] = StructTypeConverter.unmarshal(clazz, input.get(i), isOptional);
+            }
+
+            return arr;
+        }
+        else if (o.getClass().isArray()) {
+            Object[] input = (Object[])o;
+            Object arr[] = (Object[])Array.newInstance(clazz, input.length);
+            for (int i = 0; i < arr.length; i++) {
+                arr[i] = StructTypeConverter.unmarshal(clazz, input[i], isOptional);
+            }
+
+            return arr;
+        }
+        else {
+            throw RpcException.Error.INVALID_PARAMS.exc("Expected array, got: " + o.getClass().getSimpleName());
         }
     }
 

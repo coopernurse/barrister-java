@@ -7,16 +7,11 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.IOException;
-import java.util.Map;
-import java.util.List;
-import java.util.ArrayList;
 import com.bitmechanic.barrister.Contract;
 import com.bitmechanic.barrister.Server;
 import com.bitmechanic.barrister.JacksonSerializer;
-import com.bitmechanic.barrister.RpcRequest;
-import com.bitmechanic.test.A;
-import com.bitmechanic.test.B;
+import com.bitmechanic.test.conform.A;
+import com.bitmechanic.test.conform.B;
 
 public class ConformServlet extends HttpServlet {
 

@@ -1,4 +1,6 @@
 target
 *~
+barrister.iml
+conform/barrister-conform-test.iml
 conform/src/main/java/com/bitmechanic/test
 src/test/java/com/bitmechanic/test

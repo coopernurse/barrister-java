@@ -49,7 +49,7 @@ public class Client {
 
         trans = new HttpTransport("http://127.0.0.1:9233/");
         con = trans.getContract();
-        con.setPackage("com.bitmechanic.test");
+        con.setPackage("com.bitmechanic.test.conform");
 
         String line = in.readLine();
         while (line != null) {
@@ -113,9 +113,9 @@ public class Client {
             
             String meth = iface+"."+func;
             RpcRequest req = new RpcRequest(id, meth, paramsObj);
-            Object paramsConv[] = con.getFunction(iface,func).unmarshalParams(req);
+            //Object paramsConv[] = con.getFunction(iface,func).unmarshalParams(req);
             
-            req = new RpcRequest(id, meth, paramsConv);
+            //req = new RpcRequest(id, meth, paramsConv);
             
             if (batch == null) {
                 RpcResponse resp = trans.request(req);

@@ -1,11 +1,9 @@
 package com.bitmechanic.barrister;
 
 import java.io.IOException;
-import java.io.FileReader;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.Reader;
 import java.io.FileInputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.io.InputStream;
 import java.util.Map;
@@ -194,6 +192,25 @@ public class Contract extends BaseEntity {
      */
     public Map<String, Struct> getStructs() {
         return structs;
+    }
+
+    /**
+     * Returns all Structs that extend this Struct, and their
+     * descendatnts, recursively.
+     */
+    public List<Struct> getStructDescendants(Struct struct) {
+        return getStructDescendants(struct, new ArrayList<Struct>());
+    }
+
+    private List<Struct> getStructDescendants(Struct struct, List<Struct> list) {
+        for (Struct s : structs.values()) {
+            if (s.getExtends() != null && s.getExtends().equals(struct.getName())) {
+                list.add(s);
+                getStructDescendants(s, list);
+            }
+        }
+
+        return list;
     }
 
     /**

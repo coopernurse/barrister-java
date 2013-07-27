@@ -1,8 +1,11 @@
 package com.bitmechanic.barrister;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.HashMap;
 import java.lang.reflect.Method;
+import java.util.Set;
 
 /**
  * TypeConverter for user defined 'struct' types.  Native types are usually Java POJOs
@@ -43,77 +46,11 @@ public class StructTypeConverter extends BaseTypeConverter {
      * Converts o from a Map back to the Java Class associated with this Struct.
      * Recursively unmarshals all the members of the map.
      *
-     * @param o Map to unmarshal
+     * @param map Map to unmarshal
      * @throws RpcException If o does not comply with the IDL definition for this Struct
      */
-    public Object unmarshal(Object o) throws RpcException {
-        if (o == null) {
-            return returnNullIfOptional();
-        }
-        else if (!(o instanceof Map)) {
-            String msg = "struct " + s.getName() + " val must be Map, got: " +
-                o.getClass().getName();
-            throw RpcException.Error.INVALID_PARAMS.exc(msg);
-        }
-
-        String name = s.getName();
-        Object inst;
-        try {
-            inst = getTypeClass().newInstance();
-        }
-        catch (Exception e) {
-            String msg = "Unable to create: " +
-               e.getClass().getSimpleName() + ": " + e.getMessage();
-            throw RpcException.Error.INTERNAL.exc(msg);
-        }
-
-        Map input = (Map)o;
-
-        Map<String,Field> allFields = s.getFieldsPlusParents();
-        Method methods[] = inst.getClass().getMethods();
-        for (Method m : methods) {
-            name = m.getName();
-            if (name.startsWith("set")) {
-                name = name.substring(3);
-                if (name.length() > 1)
-                    name = name.substring(0,1).toLowerCase() + name.substring(1);
-                else
-                    name = name.toLowerCase();
-
-                Field f = allFields.get(name);
-                if (f == null) {
-                    // Field exists on generated Java class that isn't in the IDL
-                    String msg = "field '" + name + "' missing from: " + s.getName() +
-                        " - are generated classes in sync with IDL?";
-                    throw RpcException.Error.INVALID_PARAMS.exc(msg);
-                }
-
-                if (!input.containsKey(name)) {
-                    if (f.isOptional()) {
-                        continue;
-                    }
-                    else {
-                        String msg = "field '" + name + "' missing from input value: '" +
-                            input + "'";
-                        throw RpcException.Error.INVALID_PARAMS.exc(msg);
-                    }
-                }
-
-                Object val = input.get(name);
-                val = f.getTypeConverter().unmarshal(val);
-
-                try {
-                    m.invoke(inst, val);
-                }
-                catch (Exception e) {
-                    String msg = "Unable to set field '" + f.getName() +
-                        "' - " + e.getMessage();
-                    throw RpcException.Error.INVALID_PARAMS.exc(msg);
-                }
-            }
-        }
-
-        return inst;
+    public Object unmarshal(Object map) throws RpcException {
+        return unmarshal(getTypeClass(), map, this.s, this.isOptional);
     }
 
     /**
@@ -132,53 +69,182 @@ public class StructTypeConverter extends BaseTypeConverter {
             return returnNullIfOptional();
         }
         else if (o instanceof BStruct) {
-            Map map = new HashMap();
-            Map<String,Field> allFields = s.getFieldsPlusParents();
-            Method methods[] = o.getClass().getMethods();
-            for (Method m : methods) {
-                String name = m.getName();
-                if (name.startsWith("get") && !name.equals("getClass")) {
-                    name = name.substring(3);
-                    if (name.length() > 1)
-                        name = name.substring(0,1).toLowerCase() + name.substring(1);
-                    else
-                        name = name.toLowerCase();
-
-                    Field f = allFields.get(name);
-                    if (f == null) {
-                        String msg = "field '" + name + "' missing from: " + s.getName();
-                        throw RpcException.Error.INVALID_RESP.exc(msg);
-                    }
-
-                    Object val = null;
-                    try {
-                        val = m.invoke(o);
-                    }
-                    catch (Exception e) {
-                        String msg = s.getName() + "." + name +
-                            " unable to invoke getter - " + e.getMessage();
-                        throw RpcException.Error.INTERNAL.exc(msg);
-                    }
-
-                    if (val == null) {
-                        if (!f.isOptional()) {
-                            String msg = s.getName() + "." + name + " cannot be null";
-                            throw RpcException.Error.INVALID_RESP.exc(msg);
-                        }
-                    }
-                    else {
-                        val = f.getTypeConverter().marshal(val);
-                        map.put(name, val);
-                    }
-                }
-            }
-
-            return map;
+            return validateMap(structToMap(o, this.s), this.s);
+        }
+        else if (o instanceof Map) {
+            return validateMap((Map)o, this.s);
         }
         else {
             String msg = "Unable to convert class: " + o.getClass().getName();
             throw RpcException.Error.INVALID_RESP.exc(msg);
         }
+    }
+
+    public static Object unmarshal(Class clazz, Object o, boolean isOptional) throws RpcException {
+        return unmarshal(clazz, o, null, isOptional);
+    }
+
+    public static Object unmarshal(Class clazz, Object map, Struct struct, boolean isOptional) throws RpcException {
+        String name = (struct == null) ? clazz.getSimpleName() : struct.getName();
+        if (map == null) {
+            return BaseTypeConverter.returnNullIfOptional(isOptional);
+        }
+        else if (!(map instanceof Map)) {
+            String msg = "struct " + name + " val must be Map, got: " + map.getClass().getName();
+            throw RpcException.Error.INVALID_PARAMS.exc(msg);
+        }
+
+        try {
+            // try to use the unmarshal method that is generated on all Idl2Java struct classes
+            return clazz.getConstructor(Map.class).newInstance(map);
+        }
+        catch (NoSuchMethodException e) {
+            // try to unmarshal using no-arg constructor + setters
+            if (struct != null) {
+                return unmarshalUsingSetters(clazz, (Map)map, struct);
+            }
+            else {
+                String msg = "Unable to create: " + e.getClass().getSimpleName() + ": no Map based constructor - was Idl2Java used to generate this class using verison 0.1.13 or later?";
+                throw RpcException.Error.INTERNAL.exc(msg);
+            }
+        } catch (InvocationTargetException e) {
+            handleException(e.getTargetException());
+        } catch (Exception e) {
+            handleException(e);
+        }
+
+        throw new IllegalStateException("Unreachable statement");
+    }
+
+    private static Object unmarshalUsingSetters(Class clazz, Map map, Struct struct) throws RpcException {
+        Object inst;
+        try {
+            inst = clazz.newInstance();
+        }
+        catch (Exception e) {
+            String msg = "Unable to create: " + e.getClass().getSimpleName() + ": " + e.getMessage();
+            throw RpcException.Error.INTERNAL.exc(msg);
+        }
+
+        Map<String,Field> allFields = struct.getFieldsPlusParents();
+        Method methods[] = inst.getClass().getMethods();
+        for (Method m : methods) {
+            String name = m.getName();
+            if (name.startsWith("set")) {
+                name = name.substring(3);
+                if (name.length() > 1)
+                    name = name.substring(0,1).toLowerCase() + name.substring(1);
+                else
+                    name = name.toLowerCase();
+
+                Field f = allFields.get(name);
+                if (f == null) {
+                    // Field exists on generated Java class that isn't in the IDL
+                    String msg = "field '" + name + "' missing from: " + struct.getName() +
+                            " - are generated classes in sync with IDL?";
+                    throw RpcException.Error.INVALID_PARAMS.exc(msg);
+                }
+
+                if (!map.containsKey(name)) {
+                    if (f.isOptional()) {
+                        continue;
+                    }
+                    else {
+                        String msg = "field '" + name + "' missing from input value: '" +
+                                map + "'";
+                        throw RpcException.Error.INVALID_PARAMS.exc(msg);
+                    }
+                }
+
+                Object val = map.get(name);
+                val = f.getTypeConverter().unmarshal(val);
+
+                try {
+                    m.invoke(inst, val);
+                }
+                catch (Exception e) {
+                    String msg = "Unable to set field '" + f.getName() +
+                            "' - " + e.getMessage();
+                    throw RpcException.Error.INVALID_PARAMS.exc(msg);
+                }
+            }
+        }
+
+        return inst;
+    }
+
+    private static Map validateMap(Map map, Struct struct) throws RpcException {
+        Map<String,Field> allFields = struct.getFieldsPlusParents();
+        Set<String> allKeys = allFields.keySet();
+        for (String key : allKeys) {
+            Object val  = map.get(key);
+            Field field = allFields.get(key);
+            if (val == null && !field.isOptional()) {
+                String msg = struct.getName() + "." + key + " cannot be null";
+                throw RpcException.Error.INVALID_RESP.exc(msg);
+            }
+        }
+
+        for (Object keyObj : map.keySet()) {
+            if (!allKeys.contains(keyObj.toString())) {
+                String msg = String.format("Struct '%s' does not contain the field: '%s'", struct.getName(), keyObj);
+                throw RpcException.Error.INVALID_RESP.exc(msg);
+            }
+        }
+
+        return map;
+    }
+
+    private static Map structToMap(Object o, Struct struct) throws RpcException {
+        Map map = new HashMap();
+
+        Map<String,Field> allFields = struct.getFieldsPlusParents();
+        Set<String> descendantFieldNames = struct.getDescendantFieldNames();
+
+        Method methods[] = o.getClass().getMethods();
+        for (Method m : methods) {
+            String name = m.getName();
+            if (name.startsWith("get") && !name.equals("getClass")) {
+                name = name.substring(3);
+                if (name.length() > 1)
+                    name = name.substring(0,1).toLowerCase() + name.substring(1);
+                else
+
+                    name = name.toLowerCase();
+
+                Field f = allFields.get(name);
+                if (f == null) {
+                    if (descendantFieldNames.contains(name)) {
+                        // ok - skip this field
+                        continue;
+                    }
+
+                    // Field exists on generated Java class that isn't in the IDL
+                    String msg = "field '" + name + "' missing from: " + struct.getName() +
+                            " - are generated classes in sync with IDL? Valid fields: " +
+                            allFields.keySet();
+                    throw RpcException.Error.INVALID_PARAMS.exc(msg);
+                }
+
+                Object val = null;
+                try {
+                    val = m.invoke(o);
+                }
+                catch (Exception e) {
+                    String msg = o.getClass().getSimpleName() + "." + name +
+                            " unable to invoke getter - " + e.getMessage();
+                    throw RpcException.Error.INTERNAL.exc(msg);
+                }
+
+                if (val != null) {
+                    val = f.getTypeConverter().marshal(val);
+                    map.put(name, val);
+                }
+
+            }
+        }
+
+        return map;
     }
 
 }
