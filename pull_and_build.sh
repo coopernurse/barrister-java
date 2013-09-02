@@ -12,3 +12,4 @@ mvn install
 
 cd conform
 mvn clean package
+rsync -avz target/site/javadoc/apidocs/ james@barrister.bitmechanic.com:/home/james/barrister-site/api/java/latest/
