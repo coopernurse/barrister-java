@@ -230,7 +230,7 @@ public class Idl2Java {
 
         line(0, "");
         line(1, String.format("public %s(java.util.Map _map) throws com.bitmechanic.barrister.RpcException {", s.getSimpleName()));
-        line(2, String.format("this(", s.getSimpleName()));
+        line(2, "this(");
         line(0, join(mapConstructorArgs, ","+newline));
         line(2, ");");
         line(1, "}");
