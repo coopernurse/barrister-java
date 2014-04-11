@@ -135,8 +135,8 @@ public class Idl2Java {
         start(pkgName);
         line(0, "public class BarristerMeta {");
         line(0, "");
-        for (String key : meta.keySet()) {
-            Object val = meta.get(key);
+        for (Map.Entry<String,Object> entry : meta.entrySet()) {
+            Object val = entry.getValue();
             String type = val.getClass().getSimpleName();
             if (val.getClass() == Long.class) {
               val = val + "L";
@@ -144,7 +144,7 @@ public class Idl2Java {
             else if (val.getClass() == String.class) {
                 val = "\"" + val + "\"";
             }
-            line(1, "public static final " + type + " " + key.toUpperCase() + " = " + val + ";");
+            line(1, "public static final " + type + " " + entry.getKey().toUpperCase() + " = " + val + ";");
         }
         line(1, "public static final String PACKAGE_NAME=\"" + pkgName + "\";");
         line(1, "public static final String NS_PACKAGE_NAME=\"" + nsPkgName + "\";");

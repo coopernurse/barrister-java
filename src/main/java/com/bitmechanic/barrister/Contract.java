@@ -111,9 +111,9 @@ public class Contract extends BaseEntity {
                 enums.put(en.getName(), en);
             }
             else if (type.equals("meta")) {
-                for (Object key : e.keySet()) {
-                    if (!key.toString().equals("type")) {
-                        meta.put(key.toString(), e.get(key));
+                for (Map.Entry<String, Object> entry : e.entrySet()) {
+                    if (!entry.getKey().toString().equals("type")) {
+                        meta.put(entry.getKey().toString(), entry.getValue());
                     }
                 }
             }
