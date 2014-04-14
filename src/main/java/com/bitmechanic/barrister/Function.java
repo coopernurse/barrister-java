@@ -142,7 +142,6 @@ public class Function extends BaseEntity {
     private Object[] unmarshalParams(RpcRequest req, Method method) throws RpcException {
         Class pTypes[]  = method.getParameterTypes();
         if (params.size() != pTypes.length) {
-            String mname = method.getDeclaringClass().getName() + "." + method.getName();
             String msg = "Param mismatch for: " + req.getMethod() + " - Java expects " +
                  pTypes.length + " param(s), But IDL expects: " + params.size() + 
                 " - Make sure IDL and generated Java classes are in sync";
