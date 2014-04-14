@@ -105,7 +105,7 @@ public class Idl2Java {
         if (allImmutable) {
             out("Creating immutable struct classes");
         }
-        else if (!immutableSubstr.isEmpty()) {
+        else if (immutableSubstr != null && !immutableSubstr.isEmpty()) {
             out("Creating immutable struct classes for: " + immutableSubstr);
         }
 
