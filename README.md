@@ -10,7 +10,7 @@ To use this in your project, add this dependency to your `pom.xml`
     <dependency>
         <groupId>com.bitmechanic</groupId>
         <artifactId>barrister</artifactId>
-        <version>0.1.13</version>
+        <version>0.1.14</version>
     </dependency>
 ```
 
@@ -25,7 +25,7 @@ If you're managing dependencies manually, you need to download 3 JARs:
 One way to do this might be:
 
 ```sh
-    curl -o barrister-0.1.13.jar "http://mirrors.ibiblio.org/maven2/com/bitmechanic/barrister/0.1.13/barrister-0.1.13.jar"
+    curl -o barrister-0.1.14.jar "http://mirrors.ibiblio.org/maven2/com/bitmechanic/barrister/0.1.14/barrister-0.1.14.jar"
     curl -o jackson-mapper-asl-1.9.7.jar "http://mirrors.ibiblio.org/maven2/org/codehaus/jackson/jackson-mapper-asl/1.9.7/jackson-mapper-asl-1.9.7.jar"
     curl -o jackson-core-asl-1.9.7.jar "http://mirrors.ibiblio.org/maven2/org/codehaus/jackson/jackson-core-asl/1.9.7/jackson-core-asl-1.9.7.jar"
 ```
@@ -33,7 +33,7 @@ One way to do this might be:
 Then set your CLASSPATH:
 
 ```sh
-export CLASSPATH=barrister-0.1.13.jar:jackson-mapper-asl-1.9.7.jar:jackson-core-asl-1.9.7.jar
+export CLASSPATH=barrister-0.1.14.jar:jackson-mapper-asl-1.9.7.jar:jackson-core-asl-1.9.7.jar
 ```
 
 ### idl2java
@@ -101,7 +101,7 @@ Note to self on how to tag release
     # publish to sonatype
     mvn -DperformRelease=true clean deploy
     
-    (use m pw w/o bang)
+    (use keepass pw)
     
     # stop python flask server
         
@@ -112,15 +112,15 @@ Note to self on how to tag release
     click a repository in middle pane (may popup window with 404, ignore)
     bottom panel should show a staged release
     click 'Close' button
-    enter a comment 'barrister 0.1.13'
+    enter a comment 'barrister 0.1.14'
     click 'refresh' on the main pane - status should now be 'closed'
     click on the repository again
     click 'release' button
-    enter a comment 'Barrister RPC 0.1.13'
+    enter a comment 'Barrister RPC 0.1.14'
     
     # push tag to github
     git add -u
-    git commit -m "bump v0.1.13"
-    git tag -a v0.1.13 -m "version 0.1.13"
+    git commit -m "bump v0.1.14"
+    git tag -a v0.1.14 -m "version 0.1.14"
     git push --tags
     git push
