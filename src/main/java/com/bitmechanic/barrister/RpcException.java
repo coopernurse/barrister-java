@@ -7,11 +7,11 @@ import java.util.HashMap;
  * Represents a JSON-RPC error.  Errors have three parts:
  *
  * <ul>
- *   <li>code</li> Integer that identifies the error type
- *   <li>message</li> String description of the error
- *   <li>data</li> Optional additional info about the error. This will be serialized
+ *   <li>code Integer that identifies the error type</li>
+ *   <li>message String description of the error</li>
+ *   <li>data Optional additional info about the error. This will be serialized
  *   verbatim, so we suggest sticking to Java primitive types, or List/Maps of primitives, 
- *   otherwise the serialization behavior may be undefined.
+ *   otherwise the serialization behavior may be undefined.</li>
  * </ul>
  */
 public class RpcException extends Exception {

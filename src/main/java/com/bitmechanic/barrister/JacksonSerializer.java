@@ -1,32 +1,21 @@
 package com.bitmechanic.barrister;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.JsonToken;
-import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.node.ObjectNode;
-import org.codehaus.jackson.map.JsonSerializer;
-import org.codehaus.jackson.map.ser.CustomSerializerFactory;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import org.codehaus.jackson.util.CharTypes;
-import org.codehaus.jackson.map.SerializerProvider;
-import org.codehaus.jackson.impl.JsonWriteContext;
-import org.codehaus.jackson.JsonGenerationException;
 
 /**
  * Serializer implementation that uses Jackson to encode/decode JSON.  The only interesting bit
  * is that JsonGenerator.Feature.ESCAPE_NON_ASCII is enabled to ensure that serialized values
  * are ASCII clean.
  *
- * @see <a href="http://jackson.codehaus.org/"> Jackson Home Page
+ * @see <a href="http://jackson.codehaus.org/">Jackson Home Page</a>
  */
 public class JacksonSerializer implements Serializer
 {
