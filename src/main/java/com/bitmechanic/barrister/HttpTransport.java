@@ -236,6 +236,19 @@ public class HttpTransport implements Transport {
         return respList;
     }
 
+	/**
+	 * Returns an URLConnection for the given URL.  Subclasses may
+	 * override this and customize the connection with custom timeouts,
+	 * headers, etc.
+	 *
+	 * Headers passed into the constructor, and the Content-Length header,
+	 * will be added after this method is called.
+	 */
+	public URLConnection createURLConnection(URL url) throws IOException {
+        URLConnection conn = url.openConnection();
+		return conn;
+	}
+
     private RpcResponse unmarshal(RpcRequest req, Map map) {
         try {
             return new RpcResponse(req, contract, map);
@@ -247,7 +260,7 @@ public class HttpTransport implements Transport {
 
     private InputStream requestRaw(byte[] data) throws IOException {
         URL url = new URL(this.endpoint);
-        URLConnection conn = url.openConnection();
+        URLConnection conn = createURLConnection(url);
         conn.setDoOutput(true);
 
         for (String key : headers.keySet()) {
