@@ -407,7 +407,7 @@ public class Idl2Java {
                 params.append(namespace(p.getJavaType())).append(" ").append(p.getName());
             }
 
-            line(1, "public " + namespace(f.getReturns().getJavaType()) + " " +
+            line(1, "public " + getReturnType(f) + " " +
                  f.getName() + "(" + params + ") throws com.bitmechanic.barrister.RpcException;");
         }
         line(0, "");
@@ -438,7 +438,7 @@ public class Idl2Java {
             }
 
             line(0, "");
-            line(1, "public " + namespace(f.getReturns().getJavaType()) + " " +
+            line(1, "public " + getReturnType(f) + " " +
                  f.getName() + "(" + params + ") throws com.bitmechanic.barrister.RpcException {");
             if (f.getParams().size() == 0) {
                 line(2, "Object _params = null;");
@@ -448,15 +448,22 @@ public class Idl2Java {
             }
             line(2, "com.bitmechanic.barrister.RpcRequest _req = new com.bitmechanic.barrister.RpcRequest(java.util.UUID.randomUUID().toString(), \"" + iface.getName() + "." + f.getName() + "\", _params);");
             line(2, "com.bitmechanic.barrister.RpcResponse _resp = this._trans.request(_req);");
-            line(2, "if (_resp == null) {");
-            line(3, "return null;");
-            line(2, "}");
-            line(2, "else if (_resp.getError() == null) {");
-            line(3, "return (" + namespace(f.getReturns().getJavaType()) + ")_resp.getResult();");
-            line(2, "}");
-            line(2, "else {");
-            line(3, "throw _resp.getError();");
-            line(2, "}");
+            if (f.getReturns() == null) {
+                line(2, "if (_resp.getError() != null) {");
+                line(3, "throw _resp.getError();");
+                line(2, "}");
+            }
+            else {
+                line(2, "if (_resp == null) {");
+                line(3, "return null;");
+                line(2, "}");
+                line(2, "else if (_resp.getError() == null) {");
+                line(3, "return (" + namespace(f.getReturns().getJavaType()) + ")_resp.getResult();");
+                line(2, "}");
+                line(2, "else {");
+                line(3, "throw _resp.getError();");
+                line(2, "}");
+            }
             line(1, "}");
         }
         line(0, "");
@@ -520,6 +527,10 @@ public class Idl2Java {
         else {
             return pkgName;
         }
+    }
+
+    private String getReturnType(Function f) {
+        return (f.getReturns() == null) ? "void" : namespace(f.getReturns().getJavaType());
     }
 
     private String namespace(String javaType) {

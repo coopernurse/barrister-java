@@ -42,8 +42,13 @@ public class Function extends BaseEntity {
         }
 
         Map retMap = (Map)data.get("returns");
-        returns = new Field("", (String)retMap.get("type"), 
-                            (Boolean)retMap.get("is_array"), (Boolean)retMap.get("optional"));
+        if (retMap == null) {
+            returns = null;
+        }
+        else {
+            returns = new Field("", (String)retMap.get("type"), 
+                                (Boolean)retMap.get("is_array"), (Boolean)retMap.get("optional"));
+        }
     }
 
     /**
@@ -70,7 +75,9 @@ public class Function extends BaseEntity {
         for (Field f : params) {
             f.setContract(c);
         }
-        returns.setContract(c);
+        if (returns != null) {
+            returns.setContract(c);
+        }
     }
 
     /**
@@ -136,6 +143,12 @@ public class Function extends BaseEntity {
      * @throws RpcException if respObj does not match IDL type validation
      */
     public Object unmarshalResult(Object respObj) throws RpcException {
+        if (returns == null) {
+            if (respObj != null) {
+                throw new IllegalArgumentException("Function " + name +
+                                                   " is a notification and should not have a result");
+            }
+        }
         return returns.getTypeConverter().unmarshal(respObj);
     }
 
