@@ -130,14 +130,9 @@ public class StructTypeConverter extends BaseTypeConverter {
         Method methods[] = inst.getClass().getMethods();
         for (Method m : methods) {
             String name = m.getName();
-            if (name.startsWith("set")) {
-                name = name.substring(3);
-                if (name.length() > 1)
-                    name = name.substring(0,1).toLowerCase() + name.substring(1);
-                else
-                    name = name.toLowerCase();
+            if (name.startsWith("set") && !name.equals("set")) {
 
-                Field f = allFields.get(name);
+                Field f = resolveStructField(name.substring(3), struct, allFields, null);
                 if (f == null) {
                     // Field exists on generated Java class that isn't in the IDL
                     String msg = "field '" + name + "' missing from: " + struct.getName() +
@@ -145,6 +140,7 @@ public class StructTypeConverter extends BaseTypeConverter {
                     throw RpcException.Error.INVALID_PARAMS.exc(msg);
                 }
 
+                name = f.getName();
                 if (!map.containsKey(name)) {
                     if (f.isOptional()) {
                         continue;
@@ -204,47 +200,68 @@ public class StructTypeConverter extends BaseTypeConverter {
         Method methods[] = o.getClass().getMethods();
         for (Method m : methods) {
             String name = m.getName();
-            if (name.startsWith("get") && !name.equals("getClass")) {
-                name = name.substring(3);
-                if (name.length() > 1)
-                    name = name.substring(0,1).toLowerCase() + name.substring(1);
-                else
-
-                    name = name.toLowerCase();
-
-                Field f = allFields.get(name);
-                if (f == null) {
-                    if (descendantFieldNames.contains(name)) {
-                        // ok - skip this field
-                        continue;
+            if (name.startsWith("get") && !name.equals("getClass") && !name.equals("get")) {
+                Field f = resolveStructField(name.substring(3), struct, allFields, descendantFieldNames);
+                if (f != null) {
+                    Object val = null;
+                    try {
+                        val = m.invoke(o);
                     }
-
-                    // Field exists on generated Java class that isn't in the IDL
-                    String msg = "field '" + name + "' missing from: " + struct.getName() +
-                            " - are generated classes in sync with IDL? Valid fields: " +
-                            allFields.keySet();
-                    throw RpcException.Error.INVALID_PARAMS.exc(msg);
-                }
-
-                Object val = null;
-                try {
-                    val = m.invoke(o);
-                }
-                catch (Exception e) {
-                    String msg = o.getClass().getSimpleName() + "." + name +
+                    catch (Exception e) {
+                        String msg = o.getClass().getSimpleName() + "." + m.getName() +
                             " unable to invoke getter - " + e.getMessage();
-                    throw RpcException.Error.INTERNAL.exc(msg);
+                        throw RpcException.Error.INTERNAL.exc(msg);
+                    }
+                    
+                    if (val != null) {
+                        val = f.getTypeConverter().marshal(val);
+                        map.put(f.getName(), val);
+                    }
                 }
-
-                if (val != null) {
-                    val = f.getTypeConverter().marshal(val);
-                    map.put(name, val);
-                }
-
             }
         }
 
         return map;
+    }
+
+    static Field resolveStructField(String baseName,
+                                    Struct struct,
+                                    Map<String,Field> allFields,
+                                    Set<String> descendantFieldNames) throws RpcException {
+
+        if (baseName.length() == 0) {
+            String msg = "Invalid get method: " + baseName + " for struct: " + struct.getName();
+            throw RpcException.Error.INVALID_PARAMS.exc(msg);
+        }
+
+        // try finding field for lowercase first letter
+        // e.g. 'Email' -> 'email'
+        String name = baseName.substring(0, 1).toLowerCase() + baseName.substring(1);
+        Field f = allFields.get(name);
+        if (f != null) {
+            return f;
+        }
+
+        // try finding field for unchanged first letter
+        // e.g. 'Email' -> 'Email'
+        f = allFields.get(baseName);
+        if (f != null) {
+            return f;
+        }
+
+        if (descendantFieldNames != null) {
+            if (descendantFieldNames.contains(name) ||
+                descendantFieldNames.contains(baseName)) {
+                // ok - skip this field
+                return null;
+            }
+        }
+
+        // Field exists on generated Java class that isn't in the IDL
+        String msg = "field '" + name + "' missing from: " + struct.getName() +
+            " - are generated classes in sync with IDL? Valid fields: " +
+            allFields.keySet();
+        throw RpcException.Error.INVALID_PARAMS.exc(msg);
     }
 
 }
