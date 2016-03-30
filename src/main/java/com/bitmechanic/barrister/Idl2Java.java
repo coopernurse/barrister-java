@@ -282,7 +282,12 @@ public class Idl2Java {
             line(2, "StringBuilder sb = new StringBuilder(\"" + s.getName() + ":\");");
         }
         for (Field f : s.getFields().values()) {
-            line(2, "sb.append(\" " + f.getName() + "=\").append(" + f.getName() + ");");
+            if (f.isArray()) {
+                line(2, "sb.append(\" " + f.getName() + "=\").append(java.util.Arrays.toString(" + f.getName() + "));");
+            }
+            else {
+                line(2, "sb.append(\" " + f.getName() + "=\").append(" + f.getName() + ");");
+            }
         }
         line(2, "return sb.toString();");
         line(1, "}");
