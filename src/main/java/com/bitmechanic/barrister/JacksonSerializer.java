@@ -3,9 +3,12 @@ package com.bitmechanic.barrister;
 import java.util.List;
 import java.util.Map;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonGenerator;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -20,6 +23,11 @@ import java.io.OutputStream;
 public class JacksonSerializer implements Serializer
 {
 
+    private static final ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper()
+                .configure(SerializationFeature.WRITE_NULL_MAP_VALUES, false)
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
     private JsonFactory jsonFactory;
 
     public JacksonSerializer() {
@@ -27,22 +35,18 @@ public class JacksonSerializer implements Serializer
     }
         
     public Map readMap(InputStream is) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
         return mapper.readValue(is, Map.class);
     }
 
     public List readList(InputStream is) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
         return mapper.readValue(is, List.class);
     }
 
     public Object readMapOrList(InputStream is) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
         return mapper.readValue(is, Object.class);
     }
 
     public void write(Map map, OutputStream os) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
         JsonGenerator gen = jsonFactory.createJsonGenerator(os);
         gen.enable(JsonGenerator.Feature.ESCAPE_NON_ASCII);
         mapper.writeValue(gen, map);
@@ -50,9 +54,8 @@ public class JacksonSerializer implements Serializer
     }
 
     public void write(List list, OutputStream os) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
         JsonGenerator gen = jsonFactory.createJsonGenerator(os);
-        gen.enable(JsonGenerator.Feature.ESCAPE_NON_ASCII);
+        gen.enable(JsonGenerator.Feature.ESCAPE_NON_ASCII);        
         mapper.writeValue(gen, list);
         gen.close();
     }

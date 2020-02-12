@@ -175,7 +175,7 @@ public class Idl2Java {
             }
 
             if (allParams.length() > 0) allParams.append(", ");
-            allParams.append(newline).append("            @org.codehaus.jackson.annotate.JsonProperty(\"").append(f.getName()).append("\") ")
+            allParams.append(newline).append("            @com.fasterxml.jackson.annotation.JsonProperty(\"").append(f.getName()).append("\") ")
                     .append(namespace(f.getJavaType())).append(" ").append(f.getName());
 
             mapConstructorArgs.add(String.format("            (%s)%s", namespace(f.getJavaType()), unmarshalFunc(f, "_map.get(\"" + f.getName() + "\")")));
@@ -236,7 +236,7 @@ public class Idl2Java {
         line(1, "}");
 
         line(0, "");
-        line(1, "@org.codehaus.jackson.annotate.JsonCreator");
+        line(1, "@com.fasterxml.jackson.annotation.JsonCreator");
         line(1, "public " + s.getSimpleName() + "(" + allParams + ") {");
         line(2, "super(" + parentParams + ");");
         for (String fieldName : s.getFieldNames()) {
@@ -388,7 +388,7 @@ public class Idl2Java {
         line(4, String.format("return %s.valueOf(_obj.toString());", en.getSimpleName()));
         line(3, "}");
         line(3, "catch (Exception _e) {");
-        line(4, String.format("throw com.bitmechanic.barrister.RpcException.Error.INVALID_PARAMS.exc(\"String: \" + _obj + \" is not in the %s enum: \" + values());", en.getSimpleName()));
+        line(4, String.format("throw com.bitmechanic.barrister.RpcException.Error.INVALID_PARAMS.exc(\"String: \" + _obj + \" is not in the %s enum: \" + java.util.Arrays.toString(values()));", en.getSimpleName()));
         line(3, "}");
         line(2, "}");
         line(1, "}");
