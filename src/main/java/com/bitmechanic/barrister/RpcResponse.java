@@ -107,7 +107,7 @@ public class RpcResponse {
                 Map errMap = (Map)err;
                 int code = RpcException.Error.UNKNOWN.getCode();
                 try { code = Integer.parseInt(String.valueOf(errMap.get("code"))); }
-                catch (Exception e) { }
+                catch (NumberFormatException e) { }
                 error = new RpcException(code, (String)errMap.get("message"), errMap.get("data"));
             }
             else {

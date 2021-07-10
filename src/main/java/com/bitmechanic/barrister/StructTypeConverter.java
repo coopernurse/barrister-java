@@ -171,16 +171,16 @@ public class StructTypeConverter extends BaseTypeConverter {
 
     private static Map validateMap(Map map, Struct struct) throws RpcException {
         Map<String,Field> allFields = struct.getFieldsPlusParents();
-        Set<String> allKeys = allFields.keySet();
-        for (String key : allKeys) {
-            Object val  = map.get(key);
-            Field field = allFields.get(key);
+        for (Map.Entry<String,Field> entry : allFields.entrySet()) {
+            Object val  = map.get(entry.getKey());
+            Field field = entry.getValue();
             if (val == null && !field.isOptional()) {
-                String msg = struct.getName() + "." + key + " cannot be null";
+                String msg = struct.getName() + "." + entry.getKey() + " cannot be null";
                 throw RpcException.Error.INVALID_RESP.exc(msg);
             }
         }
 
+        Set<String> allKeys = allFields.keySet();
         for (Object keyObj : map.keySet()) {
             if (!allKeys.contains(keyObj.toString())) {
                 String msg = String.format("Struct '%s' does not contain the field: '%s'", struct.getName(), keyObj);

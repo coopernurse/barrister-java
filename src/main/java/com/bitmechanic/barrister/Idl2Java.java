@@ -105,7 +105,7 @@ public class Idl2Java {
         if (allImmutable) {
             out("Creating immutable struct classes");
         }
-        else if (!immutableSubstr.isEmpty()) {
+        else if (immutableSubstr != null && !immutableSubstr.isEmpty()) {
             out("Creating immutable struct classes for: " + immutableSubstr);
         }
 
@@ -135,8 +135,8 @@ public class Idl2Java {
         start(pkgName);
         line(0, "public class BarristerMeta {");
         line(0, "");
-        for (String key : meta.keySet()) {
-            Object val = meta.get(key);
+        for (Map.Entry<String,Object> entry : meta.entrySet()) {
+            Object val = entry.getValue();
             String type = val.getClass().getSimpleName();
             if (val.getClass() == Long.class) {
               val = val + "L";
@@ -144,7 +144,7 @@ public class Idl2Java {
             else if (val.getClass() == String.class) {
                 val = "\"" + val + "\"";
             }
-            line(1, "public static final " + type + " " + key.toUpperCase() + " = " + val + ";");
+            line(1, "public static final " + type + " " + entry.getKey().toUpperCase() + " = " + val + ";");
         }
         line(1, "public static final String PACKAGE_NAME=\"" + pkgName + "\";");
         line(1, "public static final String NS_PACKAGE_NAME=\"" + nsPkgName + "\";");
@@ -230,7 +230,7 @@ public class Idl2Java {
 
         line(0, "");
         line(1, String.format("public %s(java.util.Map _map) throws com.bitmechanic.barrister.RpcException {", s.getSimpleName()));
-        line(2, String.format("this(", s.getSimpleName()));
+        line(2, "this(");
         line(0, join(mapConstructorArgs, ","+newline));
         line(2, ");");
         line(1, "}");
